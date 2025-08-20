@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const ANIMATION_DURATION = 2000; // 2 Sekunden in Milliseconds
+const CROSSFADE_DURATION = 0.5; // 0.5 Sekunden für weiche Übergänge
 
 export class GrooveCharacterManager {
   constructor(scene) {
@@ -26,6 +27,11 @@ export class GrooveCharacterManager {
     this.isLoaded = false;
     this.characterPosition = new THREE.Vector3();
     this.characterQuaternion = new THREE.Quaternion();
+    
+    // Crossfade-System
+    this.isTransitioning = false;
+    this.fadeTimer = 0;
+    this.nextState = null;
   }
 
   async ensureLoaded() {
@@ -110,10 +116,16 @@ export class GrooveCharacterManager {
     this._switchToModel('warten1');
   }
 
-  _switchToModel(stateName) {
+  _switchToModel(stateName, useTransition = false) {
     if (!this.models[stateName] || !this.models[stateName].scene) return;
 
-    // Aktuellen Charakter entfernen
+    if (useTransition && this.currentCharacter && !this.isTransitioning) {
+      // Weichen Übergang starten
+      this._startTransition(stateName);
+      return;
+    }
+
+    // Sofortiger Wechsel (für ersten Start oder wenn bereits transitioning)
     if (this.currentCharacter) {
       this.currentCharacter.removeFromParent();
     }
@@ -138,6 +150,45 @@ export class GrooveCharacterManager {
       // Erste Animation starten
       model.actions[0].reset().play();
     }
+  }
+
+  _startTransition(nextStateName) {
+    this.isTransitioning = true;
+    this.fadeTimer = CROSSFADE_DURATION;
+    this.nextState = nextStateName;
+
+    // Neuen Charakter vorbereiten (unsichtbar)
+    const nextModel = this.models[nextStateName];
+    if (nextModel && nextModel.scene) {
+      nextModel.scene.position.copy(this.characterPosition);
+      nextModel.scene.quaternion.copy(this.characterQuaternion);
+      
+      // Unsichtbar machen für sanften Einblend-Effekt
+      this._setModelOpacity(nextModel.scene, 0);
+      this.scene.add(nextModel.scene);
+      
+      // Animation starten
+      if (nextModel.actions.length > 0) {
+        nextModel.actions.forEach(action => action.stop());
+        nextModel.actions[0].reset().play();
+      }
+    }
+  }
+
+  _setModelOpacity(model, opacity) {
+    model.traverse((child) => {
+      if (child.isMesh && child.material) {
+        if (Array.isArray(child.material)) {
+          child.material.forEach(mat => {
+            mat.transparent = true;
+            mat.opacity = opacity;
+          });
+        } else {
+          child.material.transparent = true;
+          child.material.opacity = opacity;
+        }
+      }
+    });
   }
 
   // Methode für richtige Antwort
@@ -170,16 +221,61 @@ export class GrooveCharacterManager {
       this.currentMixer.update(dt / 1000);
     }
 
+    // Crossfade-Timer handhaben
+    if (this.isTransitioning) {
+      this.fadeTimer -= dt / 1000; // in Sekunden umrechnen
+      
+      // Alpha-Werte berechnen (0 bis 1)
+      const progress = 1 - (this.fadeTimer / CROSSFADE_DURATION);
+      const currentAlpha = Math.max(0, 1 - progress);
+      const nextAlpha = Math.min(1, progress);
+      
+      // Aktuelle Animation ausblenden
+      if (this.currentCharacter) {
+        this._setModelOpacity(this.currentCharacter, currentAlpha);
+      }
+      
+      // Neue Animation einblenden
+      const nextModel = this.models[this.nextState];
+      if (nextModel && nextModel.scene) {
+        this._setModelOpacity(nextModel.scene, nextAlpha);
+        // Mixer auch updaten
+        if (nextModel.mixer) {
+          nextModel.mixer.update(dt / 1000);
+        }
+      }
+      
+      if (this.fadeTimer <= 0) {
+        // Übergang abschließen
+        this.isTransitioning = false;
+        
+        // Alten Charakter entfernen
+        if (this.currentCharacter) {
+          this.currentCharacter.removeFromParent();
+          this._setModelOpacity(this.currentCharacter, 1); // Opacity zurücksetzen
+        }
+        
+        // Neuen Charakter als aktuellen setzen
+        this.currentCharacter = nextModel.scene;
+        this.currentMixer = nextModel.mixer;
+        this.currentState = this.nextState;
+        this.nextState = null;
+        
+        // Opacity auf vollständig sichtbar setzen
+        this._setModelOpacity(this.currentCharacter, 1);
+      }
+    }
+
     // Timer für zeitlich begrenzte Animationen
-    if (this.isAnimating) {
+    if (this.isAnimating && !this.isTransitioning) {
       this.animationTimer -= dt;
       
       if (this.animationTimer <= 0) {
         this.isAnimating = false;
-        // Zurück zu einer Warte-Animation
+        // Zurück zu einer Warte-Animation mit weichem Übergang
         const waitAnimations = ['warten1', 'warten2'];
         const randomWait = waitAnimations[Math.floor(Math.random() * waitAnimations.length)];
-        this._switchToModel(randomWait);
+        this._switchToModel(randomWait, true); // useTransition = true
       }
     }
   }
@@ -220,6 +316,8 @@ export class GrooveCharacterManager {
     this.currentMixer = null;
     this.isLoaded = false;
     this.isAnimating = false;
+    this.isTransitioning = false;
+    this.nextState = null;
   }
 
   _load(url) {
