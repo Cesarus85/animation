@@ -172,4 +172,50 @@ export class CoinManager {
       }
     }
   }
+
+  dispose() {
+    const geometries = new Set();
+    const materials = new Set();
+
+    const gather = inst => {
+      if (!inst || !inst.mesh) return;
+      inst.mesh.removeFromParent();
+      inst.mesh.traverse(o => {
+        if (o.isMesh) {
+          if (o.geometry) geometries.add(o.geometry);
+          if (o.material) {
+            if (Array.isArray(o.material)) {
+              o.material.forEach(m => materials.add(m));
+            } else {
+              materials.add(o.material);
+            }
+          }
+        }
+      });
+    };
+
+    this.active.forEach(gather);
+    this.pool.forEach(gather);
+    this.active.length = 0;
+    this.pool.length = 0;
+
+    if (this.template) {
+      this.template.traverse(o => {
+        if (o.isMesh) {
+          if (o.geometry) geometries.add(o.geometry);
+          if (o.material) {
+            if (Array.isArray(o.material)) {
+              o.material.forEach(m => materials.add(m));
+            } else {
+              materials.add(o.material);
+            }
+          }
+        }
+      });
+      this.template = null;
+    }
+
+    geometries.forEach(g => g.dispose());
+    materials.forEach(m => m.dispose());
+  }
 }
