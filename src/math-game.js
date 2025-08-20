@@ -2,6 +2,10 @@
 import * as THREE from 'three';
 import { EquationDisplay } from './equation-display.js';
 
+// Duplicate from blocks.js to position number displays on the cube faces
+const BLOCK_TARGET_SIZE = 0.30;
+const EPSILON = 0.001;
+
 export class MathGame {
   constructor(ui, scene, failManager = null) {
     this.ui = ui;
@@ -20,12 +24,12 @@ export class MathGame {
 
   attachBlocks(blocks, viewerPos = null, viewerQuat = null) {
     this.blocks = blocks || [];
-    // Neue separate Anzeigetafeln neben den Blöcken erstellen
-    this.blocks.forEach((b, index) => {
+    // Neue separate Anzeigetafeln direkt an den Blöcken erstellen
+    this.blocks.forEach((b) => {
       if (!b?.mesh) return;
       if (!b.numberDisplay) {
-        b.numberDisplay = this._createNumberDisplay(b.mesh, viewerPos);
-        this.scene.add(b.numberDisplay);
+        b.numberDisplay = this._createNumberDisplay();
+        b.mesh.add(b.numberDisplay);
       }
     });
 
@@ -63,11 +67,15 @@ export class MathGame {
   dispose() {
     for (const b of this.blocks) {
       if (b?.numberDisplay) {
+        const maps = new Set();
         b.numberDisplay.traverse(o => {
-          if (o.isMesh && o.material?.map) o.material.map.dispose?.();
-          if (o.isMesh && o.material) o.material.dispose?.();
+          if (o.isMesh) {
+            if (o.material?.map) maps.add(o.material.map);
+            if (o.material) o.material.dispose?.();
+          }
           if (o.geometry) o.geometry.dispose?.();
         });
+        maps.forEach(m => m.dispose?.());
         b.numberDisplay.removeFromParent();
         b.numberDisplay = undefined;
       }
@@ -187,47 +195,36 @@ export class MathGame {
     for (let i=0;i<values.length;i++) this._setBlockNumber(this.blocks[i], values[i]);
   }
 
-  _createNumberDisplay(blockMesh, viewerPos) {
+  _createNumberDisplay() {
     const group = new THREE.Group();
-    
-    // Größe der Anzeigeplatte
-    const displaySize = 0.25;
-    const geometry = new THREE.PlaneGeometry(displaySize, displaySize * 0.6);
-    
-    const material = new THREE.MeshBasicMaterial({
-      transparent: true,
-      side: THREE.DoubleSide,
-      toneMapped: false,
-      depthTest: false,
-      depthWrite: false
-    });
+    const size = BLOCK_TARGET_SIZE;
+    const offset = size / 2 + EPSILON;
 
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.renderOrder = 2000;
-    mesh.frustumCulled = false;
-    group.add(mesh);
+    const createPlane = (rotY, pos) => {
+      const geometry = new THREE.PlaneGeometry(size, size);
+      const material = new THREE.MeshBasicMaterial({
+        transparent: true,
+        side: THREE.DoubleSide,
+        toneMapped: false,
+        depthTest: false,
+        depthWrite: false,
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.renderOrder = 2000;
+      mesh.frustumCulled = false;
+      mesh.rotation.y = rotY;
+      mesh.position.copy(pos);
+      group.add(mesh);
+    };
 
-    // Position neben dem Block berechnen
-    const blockPos = blockMesh.position.clone();
-    
-    // Richtung vom Viewer zum Block berechnen
-    const toBlock = blockPos.clone().sub(viewerPos || new THREE.Vector3(0, 0, 0)).normalize();
-    
-    // Seitliche Verschiebung (rechts vom Block aus Sicht des Viewers)
-    const right = new THREE.Vector3(0, 1, 0).cross(toBlock).normalize();
-    
-    // Position der Anzeige: neben dem Block, etwas oberhalb
-    const displayPos = blockPos.clone()
-      .add(right.multiplyScalar(0.4))  // seitlich versetzt
-      .add(new THREE.Vector3(0, 0.2, 0)); // etwas höher
-    
-    group.position.copy(displayPos);
-    
-    // Anzeige zum Viewer ausrichten
-    if (viewerPos) {
-      group.lookAt(viewerPos.clone().add(new THREE.Vector3(0, 0.2, 0)));
-    }
-    
+    // Vorder- und Rückseite (Z-Achse)
+    createPlane(0, new THREE.Vector3(0, 0, offset));
+    createPlane(Math.PI, new THREE.Vector3(0, 0, -offset));
+
+    // Seiten (X-Achse)
+    createPlane(-Math.PI / 2, new THREE.Vector3(offset, 0, 0));
+    createPlane(Math.PI / 2, new THREE.Vector3(-offset, 0, 0));
+
     return group;
   }
 
@@ -235,12 +232,12 @@ export class MathGame {
     if (!block?.numberDisplay) return;
     const text = String(value);
     const tex = this._getOrMakeNumberTexture(text);
-    // Nur das erste Mesh in der numberDisplay aktualisieren (das ist unsere Anzeigeplatte)
-    const mesh = block.numberDisplay.children[0];
-    if (mesh && mesh.isMesh && mesh.material) {
-      mesh.material.map = tex;
-      mesh.material.needsUpdate = true;
-    }
+    block.numberDisplay.traverse(o => {
+      if (o.isMesh && o.material) {
+        o.material.map = tex;
+        o.material.needsUpdate = true;
+      }
+    });
   }
 
   _getOrMakeNumberTexture(text) {
