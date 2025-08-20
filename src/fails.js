@@ -1,6 +1,7 @@
 // ./fails.js
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { loadGltf } from './utils/load-gltf.js';
 
 export class FailManager {
   constructor(scene) {
@@ -14,10 +15,11 @@ export class FailManager {
 
   async preload() {
     if (this._preloadPromise) return this._preloadPromise;
-    this._preloadPromise = new Promise((resolve) => {
-      this.loader.load('./assets/fail.glb', (gltf) => {
+    this._preloadPromise = (async () => {
+      try {
+        const gltf = await loadGltf(this.loader, './assets/fail.glb');
         const root = gltf.scene || gltf.scenes?.[0];
-        if (!root) { resolve(); return; }
+        if (!root) return;
         root.traverse(o => {
           if (o.isMesh && o.material) {
             if ('emissive' in o.material) o.material.emissive.set(0x990000);
@@ -27,9 +29,8 @@ export class FailManager {
         });
         this.template = root;
         for (let i=0;i<6;i++) this._return(this._makeInstance());
-        resolve();
-      }, undefined, () => resolve());
-    });
+      } catch {}
+    })();
     return this._preloadPromise;
   }
 

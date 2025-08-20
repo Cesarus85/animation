@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { loadGltf } from './utils/load-gltf.js';
 
 const FORWARD_DIST = 0.8;
 const HEIGHT_OFFSET = 0.40;
@@ -31,7 +32,7 @@ export class BlocksManager {
 
   async ensureLoaded() {
     if (this.template) return;
-    const gltf = await this._load('./assets/wuerfel.glb');
+    const gltf = await loadGltf(this.loader, './assets/wuerfel.glb');
     const root = gltf.scene || gltf.scenes?.[0];
     if (!root) throw new Error('wuerfel.glb ohne Szene');
 
@@ -193,11 +194,5 @@ export class BlocksManager {
       }
     }
     return bursts;
-  }
-
-  _load(url) {
-    return new Promise((resolve, reject) => {
-      this.loader.load(url, resolve, undefined, reject);
-    });
   }
 }
