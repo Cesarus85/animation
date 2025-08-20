@@ -9,6 +9,7 @@ import { getInteractionSpheres } from './input.js';
 import { MathGame } from './math-game.js';
 import { FailManager } from './fails.js';
 import { GrooveCharacterManager } from './groove-character.js';
+import { AudioManager } from './audio-manager.js';
 
 export class XRApp {
   constructor(ui) {
@@ -27,6 +28,7 @@ export class XRApp {
     this.math = null;     // NEU
     this.fails = null;    // NEU
     this.grooveCharacter = null;
+    this.audio = null;    // NEU
 
     // Eigenes Wurzelobjekt (gut zum Aufräumen)
     this.world = new THREE.Group();
@@ -69,6 +71,7 @@ export class XRApp {
     this.fails  = new FailManager(this.sceneRig.scene);
     this.math   = new MathGame(this.ui, this.sceneRig.scene, this.fails);
     this.grooveCharacter = new GrooveCharacterManager(this.sceneRig.scene);
+    this.audio  = new AudioManager();
     
     // Spieleinstellungen an MathGame weitergeben
     this.math.setGameSettings(this.gameOperation, this.gameMaxResult);
@@ -78,7 +81,8 @@ export class XRApp {
       this.blocks.ensureLoaded(),
       this.coins.ensureLoaded(),
       this.fails.preload(),
-      this.grooveCharacter.ensureLoaded()
+      this.grooveCharacter.ensureLoaded(),
+      this.audio.ensureLoaded()
     ]);
 
     // XR-Session
@@ -134,6 +138,7 @@ export class XRApp {
     try { this.fails?.dispose?.(); } catch {}
     try { this.blocks?.dispose?.(); } catch {}
     try { this.grooveCharacter?.dispose?.(); } catch {}
+    try { this.audio?.dispose?.(); } catch {}
 
     // SceneRig entsorgen
     try { this.sceneRig?.dispose?.(); } catch {}
@@ -154,6 +159,7 @@ export class XRApp {
     this.math = null;
     this.fails = null;
     this.grooveCharacter = null;
+    this.audio = null;
 
     this.world = new THREE.Group();
     this._placedBlocks = false;
@@ -235,14 +241,18 @@ export class XRApp {
         const correct = !!this.math?.handleHit?.(hitIndex, b.spawnPos);
 
         if (correct) {
-          // Richtiger Würfel → Coins + Score
+          // Richtiger Würfel → Coins + Score + Sound
           this.coins.spawnBurst(b.spawnPos, b.upNormal);
           this.ui.setScore?.(this.coins.score);
           // Groove Charakter: richtige Antwort Animation
           this.grooveCharacter?.playCorrectAnimation();
+          // Coin-Sound abspielen
+          this.audio?.playCoinSound();
         } else {
-          // Falsche Antwort → Groove Charakter Animation
+          // Falsche Antwort → Groove Charakter Animation + Sound
           this.grooveCharacter?.playIncorrectAnimation();
+          // Bump-Sound abspielen
+          this.audio?.playBumpSound();
         }
       }
     }
