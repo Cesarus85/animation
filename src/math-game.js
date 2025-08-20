@@ -108,68 +108,57 @@ export class MathGame {
   }
 
   _createNumberDisplay(blockMesh, viewerPos) {
-    const group = new THREE.Group();
-    
-    // Größe der Zahlenanzeige - größer machen für bessere Sichtbarkeit
-    const displaySize = 0.2;
+    // Erst mal nur EINE Seite testen - die vordere
+    const displaySize = 0.15;
     const geometry = new THREE.PlaneGeometry(displaySize, displaySize);
     
-    // Vier Seiten des Würfels: Vorne, Hinten, Links, Rechts
-    // Position weiter vom Würfelzentrum entfernt
-    const facePositions = [
-      { pos: new THREE.Vector3(0, 0, 0.18), rot: new THREE.Euler(0, 0, 0) },        // Vorne
-      { pos: new THREE.Vector3(0, 0, -0.18), rot: new THREE.Euler(0, Math.PI, 0) }, // Hinten  
-      { pos: new THREE.Vector3(-0.18, 0, 0), rot: new THREE.Euler(0, -Math.PI/2, 0) }, // Links
-      { pos: new THREE.Vector3(0.18, 0, 0), rot: new THREE.Euler(0, Math.PI/2, 0) }   // Rechts
-    ];
-
-    // Erstelle vier identische Zahlenanzeigen für jede Seite
-    facePositions.forEach((face, index) => {
-      const material = new THREE.MeshBasicMaterial({
-        transparent: true,
-        side: THREE.DoubleSide, // Beide Seiten sichtbar
-        toneMapped: false,
-        depthTest: false, // Über alles rendern
-        depthWrite: false,
-        alphaTest: 0.1 // Hilft bei Transparenz
-      });
-
-      const mesh = new THREE.Mesh(geometry.clone(), material);
-      mesh.position.copy(face.pos);
-      mesh.rotation.copy(face.rot);
-      mesh.renderOrder = 2000; // Sehr hohe Render-Priorität
-      mesh.frustumCulled = false;
-      mesh.castShadow = false;
-      mesh.receiveShadow = false;
-      
-      group.add(mesh);
+    // Einfaches, gut sichtbares Material
+    const material = new THREE.MeshBasicMaterial({
+      color: 0xff0000, // Rot, damit wir es sehen
+      transparent: false,
+      side: THREE.DoubleSide,
+      depthTest: false,
+      depthWrite: false
     });
 
-    // Gruppe als Kind des Würfels hinzufügen, damit sie sich mitdreht
-    blockMesh.add(group);
+    const mesh = new THREE.Mesh(geometry, material);
     
-    return group;
+    // Position direkt vor dem Würfel
+    mesh.position.set(0, 0, 0.2); // Vor dem Würfel
+    mesh.renderOrder = 3000;
+    mesh.frustumCulled = false;
+
+    // Direkt als Kind des Würfels hinzufügen
+    blockMesh.add(mesh);
+    
+    return mesh; // Nur ein Mesh zurückgeben für einfacheres Testing
   }
 
   _setBlockNumber(block, value) {
-    if (!block?.numberDisplay) {
-      console.log('[DEBUG] Kein numberDisplay für Block:', block);
-      return;
+    if (!block?.numberDisplay) return;
+    
+    // Erst mal nur die Farbe ändern basierend auf der Zahl, um zu testen ob es funktioniert
+    const colors = [
+      0xff0000, // 0 = Rot
+      0x00ff00, // 1 = Grün  
+      0x0000ff, // 2 = Blau
+      0xffff00, // 3 = Gelb
+      0xff00ff, // 4 = Magenta
+      0x00ffff, // 5 = Cyan
+      0xffffff, // 6 = Weiß
+      0x888888, // 7 = Grau
+      0xff8800, // 8 = Orange
+      0x8800ff  // 9+ = Lila
+    ];
+    
+    const colorIndex = Math.min(value, colors.length - 1);
+    const color = colors[colorIndex];
+    
+    // Farbe des Test-Quadrats ändern
+    if (block.numberDisplay.material) {
+      block.numberDisplay.material.color.setHex(color);
+      block.numberDisplay.material.needsUpdate = true;
     }
-    const text = String(value);
-    const tex = this._getOrMakeNumberTexture(text);
-    
-    console.log(`[DEBUG] Setze Zahl "${text}" auf Block mit ${block.numberDisplay.children.length} Meshes`);
-    
-    // Alle vier Seiten mit derselben Zahl aktualisieren
-    block.numberDisplay.children.forEach((mesh, index) => {
-      if (mesh && mesh.isMesh && mesh.material) {
-        mesh.material.map = tex;
-        mesh.material.needsUpdate = true;
-        mesh.material.opacity = 1.0; // Sicherstellen dass es sichtbar ist
-        console.log(`[DEBUG] Mesh ${index} aktualisiert mit Textur`);
-      }
-    });
   }
 
   _getOrMakeNumberTexture(text) {
