@@ -221,8 +221,12 @@ export class XRApp {
           // Richtiger Würfel → Coins + Score
           this.coins.spawnBurst(b.spawnPos, b.upNormal);
           this.ui.setScore?.(this.coins.score);
+          // Groove Charakter: richtige Antwort Animation
+          this.grooveCharacter?.playCorrectAnimation();
+        } else {
+          // Falsche Antwort → Groove Charakter Animation
+          this.grooveCharacter?.playIncorrectAnimation();
         }
-        // Falscher Würfel wird bereits von MathGame.handleHit() behandelt
       }
     }
 
