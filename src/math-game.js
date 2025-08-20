@@ -222,20 +222,19 @@ export class MathGame {
       const mesh = new THREE.Mesh(geometry, material);
       mesh.renderOrder = 2000;
       mesh.frustumCulled = false;
-      mesh.rotation.y = rotY;
-      const dir = new THREE.Vector3(0, 0, offset)
-        .applyAxisAngle(new THREE.Vector3(0, 1, 0), rotY);
-      mesh.position.copy(dir);
+      const q = new THREE.Quaternion().setFromAxisAngle(
+        new THREE.Vector3(0, 1, 0), rotY
+      );
+      mesh.quaternion.copy(q);
+      mesh.position.set(0, 0, offset).applyQuaternion(q);
       group.add(mesh);
     };
 
-    // Vorder- und Rückseite (Z-Achse)
+    // Vorder- und Rückseite (Z-Achse) sowie Seiten (X-Achse)
     createPlane(0);
-    createPlane(Math.PI);
-
-    // Seiten (X-Achse)
-    createPlane(-Math.PI / 2);
     createPlane(Math.PI / 2);
+    createPlane(Math.PI);
+    createPlane(-Math.PI / 2);
 
     return group;
   }
