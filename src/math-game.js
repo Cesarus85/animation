@@ -59,7 +59,10 @@ export class MathGame {
           if (o.isMesh && o.material) o.material.dispose?.();
           if (o.geometry) o.geometry.dispose?.();
         });
-        b.numberDisplay.removeFromParent();
+        // numberDisplay ist jetzt Kind des Würfels, also über parent entfernen
+        if (b.numberDisplay.parent) {
+          b.numberDisplay.removeFromParent();
+        }
         b.numberDisplay = undefined;
       }
     }
@@ -107,43 +110,39 @@ export class MathGame {
   _createNumberDisplay(blockMesh, viewerPos) {
     const group = new THREE.Group();
     
-    // Größe der Anzeigeplatte
-    const displaySize = 0.25;
-    const geometry = new THREE.PlaneGeometry(displaySize, displaySize * 0.6);
+    // Größe der Zahlenanzeige
+    const displaySize = 0.12; // Kleiner, da direkt auf Würfel
+    const geometry = new THREE.PlaneGeometry(displaySize, displaySize);
     
-    const material = new THREE.MeshBasicMaterial({
-      transparent: true,
-      side: THREE.DoubleSide,
-      toneMapped: false,
-      depthTest: false,
-      depthWrite: false
+    // Vier Seiten des Würfels: Vorne, Hinten, Links, Rechts
+    const facePositions = [
+      { pos: new THREE.Vector3(0, 0, 0.16), rot: new THREE.Euler(0, 0, 0) },        // Vorne
+      { pos: new THREE.Vector3(0, 0, -0.16), rot: new THREE.Euler(0, Math.PI, 0) }, // Hinten  
+      { pos: new THREE.Vector3(-0.16, 0, 0), rot: new THREE.Euler(0, -Math.PI/2, 0) }, // Links
+      { pos: new THREE.Vector3(0.16, 0, 0), rot: new THREE.Euler(0, Math.PI/2, 0) }   // Rechts
+    ];
+
+    // Erstelle vier identische Zahlenanzeigen für jede Seite
+    facePositions.forEach((face, index) => {
+      const material = new THREE.MeshBasicMaterial({
+        transparent: true,
+        side: THREE.FrontSide,
+        toneMapped: false,
+        depthTest: true,
+        depthWrite: false
+      });
+
+      const mesh = new THREE.Mesh(geometry.clone(), material);
+      mesh.position.copy(face.pos);
+      mesh.rotation.copy(face.rot);
+      mesh.renderOrder = 1000; // Über dem Würfel rendern
+      mesh.frustumCulled = false;
+      
+      group.add(mesh);
     });
 
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.renderOrder = 2000;
-    mesh.frustumCulled = false;
-    group.add(mesh);
-
-    // Position neben dem Block berechnen
-    const blockPos = blockMesh.position.clone();
-    
-    // Richtung vom Viewer zum Block berechnen
-    const toBlock = blockPos.clone().sub(viewerPos || new THREE.Vector3(0, 0, 0)).normalize();
-    
-    // Seitliche Verschiebung (rechts vom Block aus Sicht des Viewers)
-    const right = new THREE.Vector3(0, 1, 0).cross(toBlock).normalize();
-    
-    // Position der Anzeige: neben dem Block, etwas oberhalb
-    const displayPos = blockPos.clone()
-      .add(right.multiplyScalar(0.4))  // seitlich versetzt
-      .add(new THREE.Vector3(0, 0.2, 0)); // etwas höher
-    
-    group.position.copy(displayPos);
-    
-    // Anzeige zum Viewer ausrichten
-    if (viewerPos) {
-      group.lookAt(viewerPos.clone().add(new THREE.Vector3(0, 0.2, 0)));
-    }
+    // Gruppe als Kind des Würfels hinzufügen, damit sie sich mitdreht
+    blockMesh.add(group);
     
     return group;
   }
@@ -152,12 +151,14 @@ export class MathGame {
     if (!block?.numberDisplay) return;
     const text = String(value);
     const tex = this._getOrMakeNumberTexture(text);
-    // Nur das erste Mesh in der numberDisplay aktualisieren (das ist unsere Anzeigeplatte)
-    const mesh = block.numberDisplay.children[0];
-    if (mesh && mesh.isMesh && mesh.material) {
-      mesh.material.map = tex;
-      mesh.material.needsUpdate = true;
-    }
+    
+    // Alle vier Seiten mit derselben Zahl aktualisieren
+    block.numberDisplay.children.forEach(mesh => {
+      if (mesh && mesh.isMesh && mesh.material) {
+        mesh.material.map = tex;
+        mesh.material.needsUpdate = true;
+      }
+    });
   }
 
   _getOrMakeNumberTexture(text) {
@@ -165,28 +166,26 @@ export class MathGame {
     
     const canvas = document.createElement('canvas');
     canvas.width = 256;
-    canvas.height = 150;
+    canvas.height = 256; // Quadratisch für bessere Proportionen auf Würfel
     const ctx = canvas.getContext('2d');
 
-    // Hintergrund - ähnlich wie bei der Gleichungsanzeige
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Border
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(0, 0, canvas.width, canvas.height);
+    // Transparenter Hintergrund (kein grauer Hintergrund mehr)
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Text
-    ctx.font = 'bold 80px system-ui, Arial, sans-serif';
+    ctx.font = 'bold 120px system-ui, Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Schatten
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.fillText(text, canvas.width/2 + 2, canvas.height/2 + 2);
+    // Schwarzer Schatten für bessere Lesbarkeit
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillText(text, canvas.width/2 + 3, canvas.height/2 + 3);
 
-    // Weißer Text
+    // Weißer Text mit schwarzer Outline
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)';
+    ctx.lineWidth = 8;
+    ctx.strokeText(text, canvas.width/2, canvas.height/2);
+    
     ctx.fillStyle = '#ffffff';
     ctx.fillText(text, canvas.width/2, canvas.height/2);
 
