@@ -124,7 +124,8 @@ export class MathGame {
 
     faces.forEach(face => {
       const material = new THREE.MeshBasicMaterial({
-        transparent: true,
+        color: 0xff0000, // Erstmal alle rot, um zu sehen ob sie überhaupt da sind
+        transparent: false,
         side: THREE.DoubleSide,
         depthTest: false,
         depthWrite: false
@@ -156,15 +157,38 @@ export class MathGame {
   _setBlockNumber(block, value) {
     if (!block?.numberDisplay) return;
     
-    const text = String(value);
-    const tex = this._getOrMakeNumberTexture(text);
+    // Verschiedene Farben für verschiedene Zahlen - zum Testen
+    const colors = [
+      0xff0000, // 0 = Rot
+      0x00ff00, // 1 = Grün  
+      0x0000ff, // 2 = Blau
+      0xffff00, // 3 = Gelb
+      0xff00ff, // 4 = Magenta
+      0x00ffff, // 5 = Cyan
+      0xffffff, // 6 = Weiß
+      0x888888, // 7 = Grau
+      0xff8800, // 8 = Orange
+      0x8800ff, // 9+ = Lila
+      0x404040, // 10 = Dunkelgrau
+      0x008000, // 11 = Dunkelgrün
+      0x800080, // 12 = Dunkel-Magenta
+      0xffa500, // 13 = Orange-2
+      0x90EE90, // 14 = Hell-Grün
+      0xFFB6C1, // 15 = Hell-Rosa
+      0x20B2AA, // 16 = Hell-Blau-Grün
+      0xF0E68C, // 17 = Khaki
+      0xDDA0DD, // 18 = Pflaume
+      0x98FB98  // 19 = Hellgrün-2
+    ];
     
-    // Alle 4 Planes in der Gruppe mit der Textur aktualisieren
+    const colorIndex = Math.min(value, colors.length - 1);
+    const color = colors[colorIndex];
+    
+    // Alle 4 Planes in der Gruppe mit der Farbe aktualisieren
     block.numberDisplay.children.forEach(plane => {
       if (plane.isMesh && plane.material) {
-        plane.material.map = tex;
+        plane.material.color.setHex(color);
         plane.material.needsUpdate = true;
-        plane.material.opacity = 1.0;
       }
     });
   }
