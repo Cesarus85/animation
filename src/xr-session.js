@@ -140,6 +140,7 @@ export class XRApp {
     try { this.math?.dispose?.(); } catch {}
     try { this.fails?.dispose?.(); } catch {}
     try { this.blocks?.dispose?.(); } catch {}
+    try { this.coins?.dispose?.(); } catch {}
     try { this.grooveCharacter?.dispose?.(); } catch {}
     try { this.audio?.dispose?.(); } catch {}
 
