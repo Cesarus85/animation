@@ -13,6 +13,7 @@ import { GrooveCharacterManager } from './groove-character.js';
 export class XRApp {
   constructor(ui) {
     this.ui = ui;
+    this.onSessionEnd = null; // Callback für Session-Ende
 
     // Renderer & Szene
     this.renderer = null;
@@ -99,6 +100,8 @@ export class XRApp {
     session.addEventListener('end', () => {
       try { this.ui.setHudVisible?.(false); } catch {}
       this.cleanup();
+      // Callback aufrufen, damit UI sich zurücksetzen kann
+      if (this.onSessionEnd) this.onSessionEnd();
     });
 
     // Auf Preload warten und Pipelines „anschwitzen“ (Shader compile etc.)
@@ -117,6 +120,8 @@ export class XRApp {
       try { session.end(); } catch (e) { console.warn('Session end error', e); }
     } else {
       this.cleanup();
+      // Callback auch bei manuellem Beenden aufrufen
+      if (this.onSessionEnd) this.onSessionEnd();
     }
   }
 

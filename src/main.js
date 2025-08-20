@@ -7,6 +7,14 @@ const app = new XRApp(ui);
 const startBtn = document.getElementById('start-ar');
 const endBtn = document.getElementById('end');
 
+// Callback für Session-Ende setzen
+app.onSessionEnd = () => {
+  console.log('AR-Session beendet - UI zurücksetzen');
+  startBtn.classList.remove('hidden');
+  startBtn.disabled = false;
+  ui.setHudVisible(false);
+};
+
 startBtn.addEventListener('click', async () => {
   if (!navigator.xr) { ui.toast('WebXR wird nicht unterstützt.'); return; }
   try {
