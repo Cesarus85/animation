@@ -30,6 +30,9 @@ export class MathGame {
       if (!b.numberDisplay) {
         b.numberDisplay = this._createNumberDisplay(b);
         b.mesh.add(b.numberDisplay);
+        const inv = 1 / b.mesh.scale.x;      // Würfel ist uniform skaliert
+        b.numberDisplay.scale.setScalar(inv);
+        // Falls der Würfel später nicht uniform skaliert wird, separate Faktoren für x, y, z setzen.
       }
     });
 
