@@ -49,6 +49,25 @@ export class MathGame {
 
   updateEquationPosition(viewerPos, viewerQuat) {
     this.equationDisplay.updatePosition(viewerPos, viewerQuat);
+    this._updateNumberDisplays();
+  }
+
+  _updateNumberDisplays() {
+    // Aktualisiere Positionen der Zahlenanzeigen basierend auf Würfelpositionen
+    for (const block of this.blocks) {
+      if (block?.numberDisplay && block.mesh && block.numberDisplay.userData.blockMesh) {
+        const blockPos = new THREE.Vector3();
+        block.mesh.getWorldPosition(blockPos);
+        
+        const offset = block.numberDisplay.userData.offset;
+        block.numberDisplay.position.copy(blockPos).add(offset);
+        
+        // Rotation auch übernehmen
+        const blockQuat = new THREE.Quaternion();
+        block.mesh.getWorldQuaternion(blockQuat);
+        block.numberDisplay.quaternion.copy(blockQuat);
+      }
+    }
   }
 
   dispose() {
@@ -108,30 +127,33 @@ export class MathGame {
   }
 
   _createNumberDisplay(blockMesh, viewerPos) {
-    // Erst mal nur EINE Seite testen - die vordere
-    const displaySize = 0.15;
-    const geometry = new THREE.PlaneGeometry(displaySize, displaySize);
+    // Test: Großes, gut sichtbares Objekt direkt zur Scene hinzufügen
+    const displaySize = 0.3; // Größer für bessere Sichtbarkeit
+    const geometry = new THREE.BoxGeometry(displaySize, displaySize, 0.05); // 3D Box statt Plane
     
-    // Einfaches, gut sichtbares Material
+    // Sehr auffälliges Material
     const material = new THREE.MeshBasicMaterial({
-      color: 0xff0000, // Rot, damit wir es sehen
+      color: 0x00ff00, // Grün, sehr auffällig
       transparent: false,
-      side: THREE.DoubleSide,
-      depthTest: false,
-      depthWrite: false
+      wireframe: true, // Wireframe für maximale Sichtbarkeit
     });
 
     const mesh = new THREE.Mesh(geometry, material);
     
-    // Position direkt vor dem Würfel
-    mesh.position.set(0, 0, 0.2); // Vor dem Würfel
-    mesh.renderOrder = 3000;
-    mesh.frustumCulled = false;
-
-    // Direkt als Kind des Würfels hinzufügen
-    blockMesh.add(mesh);
+    // Position basierend auf Würfelposition setzen
+    const blockPos = blockMesh.position.clone();
+    mesh.position.copy(blockPos);
+    mesh.position.z += 0.3; // Vor dem Würfel
+    mesh.position.y += 0.2; // Etwas höher
     
-    return mesh; // Nur ein Mesh zurückgeben für einfacheres Testing
+    // Zur Scene hinzufügen statt als Kind
+    this.scene.add(mesh);
+    
+    // Referenz zum ursprünglichen Block speichern für Updates
+    mesh.userData.blockMesh = blockMesh;
+    mesh.userData.offset = new THREE.Vector3(0, 0.2, 0.3);
+    
+    return mesh;
   }
 
   _setBlockNumber(block, value) {
