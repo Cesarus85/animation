@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { loadGltf } from './utils/load-gltf.js';
 
 const ANIMATION_DURATION = 2000; // 2 Sekunden in Milliseconds
 const CROSSFADE_DURATION = 0.5; // 0.5 Sekunden für weiche Übergänge
@@ -64,7 +65,7 @@ export class GrooveCharacterManager {
 
   async _loadModel(name, url) {
     try {
-      const gltf = await this._load(url);
+      const gltf = await loadGltf(this.loader, url);
       const root = gltf.scene || gltf.scenes?.[0];
       if (!root) throw new Error(`${url} ohne Szene`);
 
@@ -333,11 +334,5 @@ export class GrooveCharacterManager {
     this.isAnimating = false;
     this.isTransitioning = false;
     this.nextState = null;
-  }
-
-  _load(url) {
-    return new Promise((resolve, reject) => {
-      this.loader.load(url, resolve, undefined, reject);
-    });
   }
 }

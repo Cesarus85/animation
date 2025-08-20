@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { loadGltf } from './utils/load-gltf.js';
 
 const COIN_DIAMETER = 0.14;
 const GRAVITY = -3.8;
@@ -30,7 +31,7 @@ export class CoinManager {
   }
 
   async _loadTemplate() {
-    const gltf = await this._load('./assets/coin.glb');
+    const gltf = await loadGltf(this.loader, './assets/coin.glb');
     const root = gltf.scene || gltf.scenes?.[0];
     if (!root) throw new Error('coin.glb ohne Szene');
 
@@ -170,11 +171,5 @@ export class CoinManager {
         this._return(inst);
       }
     }
-  }
-
-  _load(url) {
-    return new Promise((resolve, reject) => {
-      this.loader.load(url, resolve, undefined, reject);
-    });
   }
 }
