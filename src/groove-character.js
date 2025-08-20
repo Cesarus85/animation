@@ -8,6 +8,7 @@ export class GrooveCharacterManager {
   constructor(scene) {
     this.scene = scene;
     this.loader = new GLTFLoader();
+    this.audioManager = null; // Wird später gesetzt
     
     // Verschiedene Charakter-Modelle für verschiedene Zustände
     this.models = {
@@ -32,6 +33,10 @@ export class GrooveCharacterManager {
     this.isTransitioning = false;
     this.fadeTimer = 0;
     this.nextState = null;
+  }
+
+  setAudioManager(audioManager) {
+    this.audioManager = audioManager;
   }
 
   async ensureLoaded() {
@@ -196,6 +201,11 @@ export class GrooveCharacterManager {
     const animations = ['richtig1', 'richtig2'];
     const randomAnimation = animations[Math.floor(Math.random() * animations.length)];
     this._playTimedAnimation(randomAnimation);
+    
+    // Sprach-Sound abspielen
+    if (this.audioManager) {
+      this.audioManager.playCorrectVoice();
+    }
   }
 
   // Methode für falsche Antwort
@@ -203,6 +213,11 @@ export class GrooveCharacterManager {
     const animations = ['falsch1', 'falsch2'];
     const randomAnimation = animations[Math.floor(Math.random() * animations.length)];
     this._playTimedAnimation(randomAnimation);
+    
+    // Sprach-Sound abspielen
+    if (this.audioManager) {
+      this.audioManager.playIncorrectVoice();
+    }
   }
 
   _playTimedAnimation(animationType) {

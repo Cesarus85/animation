@@ -17,7 +17,11 @@ export class AudioManager {
       // Audio-Dateien laden
       await Promise.all([
         this._loadSound('coin', './assets/coin.wav'),
-        this._loadSound('bump', './assets/bump.wav')
+        this._loadSound('bump', './assets/bump.wav'),
+        this._loadSound('richtig1', './assets/richtig1.mp3'),
+        this._loadSound('richtig2', './assets/richtig2.mp3'),
+        this._loadSound('falsch1', './assets/falsch1.mp3'),
+        this._loadSound('falsch2', './assets/falsch2.mp3')
       ]);
       
       this.isLoaded = true;
@@ -96,6 +100,18 @@ export class AudioManager {
 
   playBumpSound() {
     this.playSound('bump', 0.6);
+  }
+
+  playCorrectVoice() {
+    // Zufällige Auswahl zwischen richtig1 und richtig2
+    const voiceSound = Math.random() < 0.5 ? 'richtig1' : 'richtig2';
+    this.playSound(voiceSound, 0.8); // Etwas lauter für Sprachverständlichkeit
+  }
+
+  playIncorrectVoice() {
+    // Zufällige Auswahl zwischen falsch1 und falsch2
+    const voiceSound = Math.random() < 0.5 ? 'falsch1' : 'falsch2';
+    this.playSound(voiceSound, 0.8); // Etwas lauter für Sprachverständlichkeit
   }
 
   setVolume(volume) {

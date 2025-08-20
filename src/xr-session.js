@@ -75,6 +75,9 @@ export class XRApp {
     
     // Spieleinstellungen an MathGame weitergeben
     this.math.setGameSettings(this.gameOperation, this.gameMaxResult);
+    
+    // AudioManager an GrooveCharacter weitergeben
+    this.grooveCharacter.setAudioManager(this.audio);
 
     // Assets / Pools vorladen
     const preload = Promise.all([
