@@ -28,7 +28,7 @@ export class MathGame {
     this.blocks.forEach((b) => {
       if (!b?.mesh) return;
       if (!b.numberDisplay) {
-        b.numberDisplay = this._createNumberDisplay();
+        b.numberDisplay = this._createNumberDisplay(b);
         b.mesh.add(b.numberDisplay);
       }
     });
@@ -192,38 +192,47 @@ export class MathGame {
     }
 
     // Auf die Blöcke mappen
-    for (let i=0;i<values.length;i++) this._setBlockNumber(this.blocks[i], values[i]);
+    for (let i = 0; i < values.length; i++) this._setBlockNumber(this.blocks[i], values[i]);
   }
 
-  _createNumberDisplay() {
+  _createNumberDisplay(block = null) {
     const group = new THREE.Group();
     const size = BLOCK_TARGET_SIZE;
-    const offset = size / 2 + EPSILON;
+    let offset = size / 2 + EPSILON;
 
-    const createPlane = (rotY, pos) => {
+    // Optional: tatsächliche Blockgröße ermitteln
+    if (block?.mesh) {
+      const box = new THREE.Box3().setFromObject(block.mesh);
+      const dims = new THREE.Vector3();
+      box.getSize(dims);
+      offset = Math.max(dims.x, dims.z) / 2 + EPSILON;
+    }
+
+    const createPlane = (rotY) => {
       const geometry = new THREE.PlaneGeometry(size, size);
       const material = new THREE.MeshBasicMaterial({
         transparent: true,
         side: THREE.DoubleSide,
         toneMapped: false,
-        depthTest: false,
         depthWrite: false,
       });
       const mesh = new THREE.Mesh(geometry, material);
       mesh.renderOrder = 2000;
       mesh.frustumCulled = false;
       mesh.rotation.y = rotY;
-      mesh.position.copy(pos);
+      const dir = new THREE.Vector3(0, 0, offset)
+        .applyAxisAngle(new THREE.Vector3(0, 1, 0), rotY);
+      mesh.position.copy(dir);
       group.add(mesh);
     };
 
     // Vorder- und Rückseite (Z-Achse)
-    createPlane(0, new THREE.Vector3(0, 0, offset));
-    createPlane(Math.PI, new THREE.Vector3(0, 0, -offset));
+    createPlane(0);
+    createPlane(Math.PI);
 
     // Seiten (X-Achse)
-    createPlane(-Math.PI / 2, new THREE.Vector3(offset, 0, 0));
-    createPlane(Math.PI / 2, new THREE.Vector3(-offset, 0, 0));
+    createPlane(-Math.PI / 2);
+    createPlane(Math.PI / 2);
 
     return group;
   }
