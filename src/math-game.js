@@ -49,25 +49,6 @@ export class MathGame {
 
   updateEquationPosition(viewerPos, viewerQuat) {
     this.equationDisplay.updatePosition(viewerPos, viewerQuat);
-    this._updateNumberDisplays();
-  }
-
-  _updateNumberDisplays() {
-    // Aktualisiere Positionen der Zahlenanzeigen basierend auf Würfelpositionen
-    for (const block of this.blocks) {
-      if (block?.numberDisplay && block.mesh && block.numberDisplay.userData.blockMesh) {
-        const blockPos = new THREE.Vector3();
-        block.mesh.getWorldPosition(blockPos);
-        
-        const offset = block.numberDisplay.userData.offset;
-        block.numberDisplay.position.copy(blockPos).add(offset);
-        
-        // Rotation auch übernehmen
-        const blockQuat = new THREE.Quaternion();
-        block.mesh.getWorldQuaternion(blockQuat);
-        block.numberDisplay.quaternion.copy(blockQuat);
-      }
-    }
   }
 
   dispose() {
@@ -127,94 +108,101 @@ export class MathGame {
   }
 
   _createNumberDisplay(blockMesh, viewerPos) {
-    // Test: Großes, gut sichtbares Objekt direkt zur Scene hinzufügen
-    const displaySize = 0.3; // Größer für bessere Sichtbarkeit
-    const geometry = new THREE.BoxGeometry(displaySize, displaySize, 0.05); // 3D Box statt Plane
+    // Erstelle 4 Zahlenplanes für die Seiten des rotierenden Würfels
+    const group = new THREE.Group();
     
-    // Sehr auffälliges Material
-    const material = new THREE.MeshBasicMaterial({
-      color: 0x00ff00, // Grün, sehr auffällig
-      transparent: false,
-      wireframe: true, // Wireframe für maximale Sichtbarkeit
+    const displaySize = 0.15;
+    const geometry = new THREE.PlaneGeometry(displaySize, displaySize);
+    
+    // 4 Seiten: vorne, hinten, links, rechts
+    const faces = [
+      { pos: new THREE.Vector3(0, 0, 0.16), rot: new THREE.Euler(0, 0, 0) },
+      { pos: new THREE.Vector3(0, 0, -0.16), rot: new THREE.Euler(0, Math.PI, 0) },
+      { pos: new THREE.Vector3(-0.16, 0, 0), rot: new THREE.Euler(0, -Math.PI/2, 0) },
+      { pos: new THREE.Vector3(0.16, 0, 0), rot: new THREE.Euler(0, Math.PI/2, 0) }
+    ];
+
+    faces.forEach(face => {
+      const material = new THREE.MeshBasicMaterial({
+        transparent: true,
+        side: THREE.DoubleSide,
+        depthTest: false,
+        depthWrite: false
+      });
+
+      const plane = new THREE.Mesh(geometry.clone(), material);
+      plane.position.copy(face.pos);
+      plane.rotation.copy(face.rot);
+      plane.renderOrder = 2000;
+      plane.frustumCulled = false;
+      
+      group.add(plane);
     });
 
-    const mesh = new THREE.Mesh(geometry, material);
-    
-    // Position basierend auf Würfelposition setzen
-    const blockPos = blockMesh.position.clone();
-    mesh.position.copy(blockPos);
-    mesh.position.z += 0.3; // Vor dem Würfel
-    mesh.position.y += 0.2; // Etwas höher
-    
-    // Zur Scene hinzufügen statt als Kind
-    this.scene.add(mesh);
-    
-    // Referenz zum ursprünglichen Block speichern für Updates
-    mesh.userData.blockMesh = blockMesh;
-    mesh.userData.offset = new THREE.Vector3(0, 0.2, 0.3);
-    
-    return mesh;
+    // Finde den rotierenden Würfel in der Mesh-Hierarchie und füge die Zahlen dort hinzu
+    // Der rotierende Würfel ist wahrscheinlich ein Kind des Haupt-Meshs
+    let targetMesh = blockMesh;
+    blockMesh.traverse((child) => {
+      // Suche nach einem Mesh, das nicht der Haupt-Container ist
+      if (child.isMesh && child !== blockMesh) {
+        targetMesh = child;
+      }
+    });
+
+    targetMesh.add(group);
+    return group;
   }
 
   _setBlockNumber(block, value) {
     if (!block?.numberDisplay) return;
     
-    // Erst mal nur die Farbe ändern basierend auf der Zahl, um zu testen ob es funktioniert
-    const colors = [
-      0xff0000, // 0 = Rot
-      0x00ff00, // 1 = Grün  
-      0x0000ff, // 2 = Blau
-      0xffff00, // 3 = Gelb
-      0xff00ff, // 4 = Magenta
-      0x00ffff, // 5 = Cyan
-      0xffffff, // 6 = Weiß
-      0x888888, // 7 = Grau
-      0xff8800, // 8 = Orange
-      0x8800ff  // 9+ = Lila
-    ];
+    const text = String(value);
+    const tex = this._getOrMakeNumberTexture(text);
     
-    const colorIndex = Math.min(value, colors.length - 1);
-    const color = colors[colorIndex];
-    
-    // Farbe des Test-Quadrats ändern
-    if (block.numberDisplay.material) {
-      block.numberDisplay.material.color.setHex(color);
-      block.numberDisplay.material.needsUpdate = true;
-    }
+    // Alle 4 Planes in der Gruppe mit der Textur aktualisieren
+    block.numberDisplay.children.forEach(plane => {
+      if (plane.isMesh && plane.material) {
+        plane.material.map = tex;
+        plane.material.needsUpdate = true;
+        plane.material.opacity = 1.0;
+      }
+    });
   }
 
   _getOrMakeNumberTexture(text) {
     if (this.texCache.has(text)) return this.texCache.get(text);
     
     const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 512;
+    canvas.width = 256;
+    canvas.height = 256;
     const ctx = canvas.getContext('2d');
 
-    // Erst einen sichtbaren Hintergrund zum Debuggen
-    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)'; // Rötlicher Hintergrund zum Debuggen
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Transparenter Hintergrund
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Text
-    ctx.font = 'bold 200px Arial, sans-serif';
+    // Text-Styling
+    ctx.font = 'bold 160px Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
     // Schwarzer Schatten
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
-    ctx.fillText(text, canvas.width/2 + 4, canvas.height/2 + 4);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillText(text, canvas.width/2 + 3, canvas.height/2 + 3);
 
-    // Weißer Text 
+    // Weißer Text mit schwarzer Outline für beste Lesbarkeit
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)';
+    ctx.lineWidth = 6;
+    ctx.strokeText(text, canvas.width/2, canvas.height/2);
+    
     ctx.fillStyle = '#ffffff';
     ctx.fillText(text, canvas.width/2, canvas.height/2);
 
     const tex = new THREE.CanvasTexture(canvas);
     tex.anisotropy = 4;
     tex.needsUpdate = true;
-    tex.flipY = false; // Wichtig für korrekte Orientierung
+    tex.flipY = false;
     this.texCache.set(text, tex);
     
-    console.log(`[DEBUG] Textur für "${text}" erstellt:`, tex); // Debug-Log
     return tex;
   }
 }

@@ -53,10 +53,7 @@ export class BlocksManager {
   }
 
   clear() {
-    for (const b of this.blocks) {
-      b.mesh?.removeFromParent();
-      b.testMesh?.removeFromParent(); // Test-Mesh auch entfernen
-    }
+    for (const b of this.blocks) b.mesh?.removeFromParent();
     this.blocks.length = 0;
     this._placed = false;
   }
@@ -98,17 +95,6 @@ export class BlocksManager {
       mesh.frustumCulled = true;
       this.scene.add(mesh);
 
-      // TEST: Rote Box direkt neben dem Würfel hinzufügen
-      const testGeometry = new THREE.BoxGeometry(0.4, 0.4, 0.4);
-      const testMaterial = new THREE.MeshBasicMaterial({ 
-        color: 0xff0000, 
-        wireframe: true 
-      });
-      const testMesh = new THREE.Mesh(testGeometry, testMaterial);
-      testMesh.position.copy(pos);
-      testMesh.position.x += 0.5; // Rechts neben dem Würfel
-      this.scene.add(testMesh);
-
       const aabb = new THREE.Box3().setFromObject(mesh);
       this.blocks.push({
         mesh, aabb,
@@ -116,8 +102,7 @@ export class BlocksManager {
         basePos: mesh.position.clone(),
         armed: true,
         noContactFrames: 0,
-        lastFireAt: -Infinity,
-        testMesh: testMesh // Test-Referenz
+        lastFireAt: -Infinity
       });
     }
   }
