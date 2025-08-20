@@ -110,33 +110,37 @@ export class MathGame {
   _createNumberDisplay(blockMesh, viewerPos) {
     const group = new THREE.Group();
     
-    // Größe der Zahlenanzeige
-    const displaySize = 0.12; // Kleiner, da direkt auf Würfel
+    // Größe der Zahlenanzeige - größer machen für bessere Sichtbarkeit
+    const displaySize = 0.2;
     const geometry = new THREE.PlaneGeometry(displaySize, displaySize);
     
     // Vier Seiten des Würfels: Vorne, Hinten, Links, Rechts
+    // Position weiter vom Würfelzentrum entfernt
     const facePositions = [
-      { pos: new THREE.Vector3(0, 0, 0.16), rot: new THREE.Euler(0, 0, 0) },        // Vorne
-      { pos: new THREE.Vector3(0, 0, -0.16), rot: new THREE.Euler(0, Math.PI, 0) }, // Hinten  
-      { pos: new THREE.Vector3(-0.16, 0, 0), rot: new THREE.Euler(0, -Math.PI/2, 0) }, // Links
-      { pos: new THREE.Vector3(0.16, 0, 0), rot: new THREE.Euler(0, Math.PI/2, 0) }   // Rechts
+      { pos: new THREE.Vector3(0, 0, 0.18), rot: new THREE.Euler(0, 0, 0) },        // Vorne
+      { pos: new THREE.Vector3(0, 0, -0.18), rot: new THREE.Euler(0, Math.PI, 0) }, // Hinten  
+      { pos: new THREE.Vector3(-0.18, 0, 0), rot: new THREE.Euler(0, -Math.PI/2, 0) }, // Links
+      { pos: new THREE.Vector3(0.18, 0, 0), rot: new THREE.Euler(0, Math.PI/2, 0) }   // Rechts
     ];
 
     // Erstelle vier identische Zahlenanzeigen für jede Seite
     facePositions.forEach((face, index) => {
       const material = new THREE.MeshBasicMaterial({
         transparent: true,
-        side: THREE.FrontSide,
+        side: THREE.DoubleSide, // Beide Seiten sichtbar
         toneMapped: false,
-        depthTest: true,
-        depthWrite: false
+        depthTest: false, // Über alles rendern
+        depthWrite: false,
+        alphaTest: 0.1 // Hilft bei Transparenz
       });
 
       const mesh = new THREE.Mesh(geometry.clone(), material);
       mesh.position.copy(face.pos);
       mesh.rotation.copy(face.rot);
-      mesh.renderOrder = 1000; // Über dem Würfel rendern
+      mesh.renderOrder = 2000; // Sehr hohe Render-Priorität
       mesh.frustumCulled = false;
+      mesh.castShadow = false;
+      mesh.receiveShadow = false;
       
       group.add(mesh);
     });
@@ -148,15 +152,22 @@ export class MathGame {
   }
 
   _setBlockNumber(block, value) {
-    if (!block?.numberDisplay) return;
+    if (!block?.numberDisplay) {
+      console.log('[DEBUG] Kein numberDisplay für Block:', block);
+      return;
+    }
     const text = String(value);
     const tex = this._getOrMakeNumberTexture(text);
     
+    console.log(`[DEBUG] Setze Zahl "${text}" auf Block mit ${block.numberDisplay.children.length} Meshes`);
+    
     // Alle vier Seiten mit derselben Zahl aktualisieren
-    block.numberDisplay.children.forEach(mesh => {
+    block.numberDisplay.children.forEach((mesh, index) => {
       if (mesh && mesh.isMesh && mesh.material) {
         mesh.material.map = tex;
         mesh.material.needsUpdate = true;
+        mesh.material.opacity = 1.0; // Sicherstellen dass es sichtbar ist
+        console.log(`[DEBUG] Mesh ${index} aktualisiert mit Textur`);
       }
     });
   }
@@ -165,34 +176,34 @@ export class MathGame {
     if (this.texCache.has(text)) return this.texCache.get(text);
     
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 256; // Quadratisch für bessere Proportionen auf Würfel
+    canvas.width = 512;
+    canvas.height = 512;
     const ctx = canvas.getContext('2d');
 
-    // Transparenter Hintergrund (kein grauer Hintergrund mehr)
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Erst einen sichtbaren Hintergrund zum Debuggen
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)'; // Rötlicher Hintergrund zum Debuggen
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Text
-    ctx.font = 'bold 120px system-ui, Arial, sans-serif';
+    ctx.font = 'bold 200px Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Schwarzer Schatten für bessere Lesbarkeit
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-    ctx.fillText(text, canvas.width/2 + 3, canvas.height/2 + 3);
+    // Schwarzer Schatten
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+    ctx.fillText(text, canvas.width/2 + 4, canvas.height/2 + 4);
 
-    // Weißer Text mit schwarzer Outline
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)';
-    ctx.lineWidth = 8;
-    ctx.strokeText(text, canvas.width/2, canvas.height/2);
-    
+    // Weißer Text 
     ctx.fillStyle = '#ffffff';
     ctx.fillText(text, canvas.width/2, canvas.height/2);
 
     const tex = new THREE.CanvasTexture(canvas);
     tex.anisotropy = 4;
     tex.needsUpdate = true;
+    tex.flipY = false; // Wichtig für korrekte Orientierung
     this.texCache.set(text, tex);
+    
+    console.log(`[DEBUG] Textur für "${text}" erstellt:`, tex); // Debug-Log
     return tex;
   }
 }
