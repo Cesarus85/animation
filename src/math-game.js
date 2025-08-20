@@ -215,6 +215,7 @@ export class MathGame {
       const geometry = new THREE.PlaneGeometry(size, size);
       const material = new THREE.MeshBasicMaterial({
         transparent: true,
+        alphaTest: 0.1,
         side: THREE.DoubleSide,
         toneMapped: false,
         depthWrite: false,
@@ -259,14 +260,8 @@ export class MathGame {
     canvas.height = 150;
     const ctx = canvas.getContext('2d');
 
-    // Hintergrund - ähnlich wie bei der Gleichungsanzeige
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Border
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(0, 0, canvas.width, canvas.height);
+    // Start with a transparent canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Text
     ctx.font = 'bold 80px system-ui, Arial, sans-serif';
