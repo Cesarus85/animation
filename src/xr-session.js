@@ -39,6 +39,15 @@ export class XRApp {
     this._placedBlocks = false;
     this._prevTime = null;
     this._didWarmup = false;
+    
+    // Spieleinstellungen
+    this.gameOperation = 'addition';
+    this.gameMaxResult = 20;
+  }
+
+  setGameSettings(operation, maxResult) {
+    this.gameOperation = operation;
+    this.gameMaxResult = maxResult;
   }
 
   async startAR() {
@@ -59,6 +68,9 @@ export class XRApp {
     this.fails  = new FailManager(this.sceneRig.scene);
     this.math   = new MathGame(this.ui, this.sceneRig.scene, this.fails);
     this.grooveCharacter = new GrooveCharacterManager(this.sceneRig.scene);
+    
+    // Spieleinstellungen an MathGame weitergeben
+    this.math.setGameSettings(this.gameOperation, this.gameMaxResult);
 
     // Assets / Pools vorladen
     const preload = Promise.all([

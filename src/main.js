@@ -11,6 +11,14 @@ startBtn.addEventListener('click', async () => {
   if (!navigator.xr) { ui.toast('WebXR wird nicht unterstützt.'); return; }
   try {
     startBtn.disabled = true;
+    
+    // Spieleinstellungen lesen
+    const operation = document.getElementById('operation').value;
+    const maxResult = parseInt(document.getElementById('max-result').value);
+    
+    // Einstellungen an die App weitergeben
+    app.setGameSettings(operation, maxResult);
+    
     await app.startAR();
     ui.setHudVisible(true);
     startBtn.classList.add('hidden');

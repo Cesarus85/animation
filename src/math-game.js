@@ -9,9 +9,13 @@ export class MathGame {
     this.failManager = failManager;
     this.blocks = [];
     this.correctIndex = 0;
-    this.current = { a: 1, b: 1, sum: 2 };
+    this.current = { a: 1, b: 1, result: 2, operation: '+' };
     this.texCache = new Map();
     this.equationDisplay = new EquationDisplay(scene);
+    
+    // Spieleinstellungen (Standard-Werte)
+    this.operation = 'addition';
+    this.maxResult = 20;
   }
 
   attachBlocks(blocks, viewerPos = null, viewerQuat = null) {
@@ -51,6 +55,11 @@ export class MathGame {
     this.equationDisplay.updatePosition(viewerPos, viewerQuat);
   }
 
+  setGameSettings(operation, maxResult) {
+    this.operation = operation;
+    this.maxResult = maxResult;
+  }
+
   dispose() {
     for (const b of this.blocks) {
       if (b?.numberDisplay) {
@@ -71,34 +80,108 @@ export class MathGame {
   // ---------- intern ----------
 
   _newProblem(isFirst = false) {
-    // a + b, Summe <= 20
-    const a = 1 + Math.floor(Math.random() * 10);
-    const bMax = Math.min(20 - a, 10);
-    const b = 1 + Math.floor(Math.random() * Math.max(1, bMax));
-    const sum = a + b;
-    this.current = { a, b, sum };
-    const equationText = `${a} + ${b} = ?`;
+    let a, b, result, operationSymbol, equationText;
+
+    switch (this.operation) {
+      case 'addition':
+        // a + b = result, result <= maxResult
+        a = 1 + Math.floor(Math.random() * Math.min(this.maxResult - 1, 20));
+        const bMaxAdd = this.maxResult - a;
+        b = 1 + Math.floor(Math.random() * Math.max(1, Math.min(bMaxAdd - 1, 20)));
+        result = a + b;
+        operationSymbol = '+';
+        break;
+
+      case 'subtraction':
+        // a - b = result, result >= 0
+        result = Math.floor(Math.random() * Math.min(this.maxResult, 20));
+        b = Math.floor(Math.random() * Math.min(20, this.maxResult - result)) + 1;
+        a = result + b;
+        operationSymbol = '-';
+        break;
+
+      case 'multiplication':
+        // a × b = result, result <= maxResult, nur ganze Zahlen
+        a = 2 + Math.floor(Math.random() * Math.min(10, Math.floor(this.maxResult / 2)));
+        const bMaxMult = Math.floor(this.maxResult / a);
+        b = 2 + Math.floor(Math.random() * Math.max(1, Math.min(bMaxMult - 1, 10)));
+        result = a * b;
+        operationSymbol = '×';
+        break;
+
+      case 'division':
+        // a ÷ b = result, nur ganze Zahlen als Ergebnis
+        result = 2 + Math.floor(Math.random() * Math.min(this.maxResult - 1, 15));
+        b = 2 + Math.floor(Math.random() * Math.min(10, Math.floor(this.maxResult / result)));
+        a = result * b; // Sicherstellen, dass Teilung aufgeht
+        operationSymbol = '÷';
+        break;
+
+      default:
+        // Fallback auf Addition
+        a = 1 + Math.floor(Math.random() * 10);
+        b = 1 + Math.floor(Math.random() * Math.max(1, this.maxResult - a));
+        result = a + b;
+        operationSymbol = '+';
+        break;
+    }
+
+    this.current = { a, b, result, operation: operationSymbol };
+    equationText = `${a} ${operationSymbol} ${b} = ?`;
     this.ui?.setEquation?.(equationText);
     this.equationDisplay.updateEquation(equationText);
 
     // Zufälliger Index für korrekte Antwort
     this.correctIndex = Math.floor(Math.random() * Math.min(4, this.blocks.length));
 
-    // 3 plausible Falschantworten
-    const answers = new Set([sum]);
+    // 3 plausible Falschantworten generieren
+    const answers = new Set([result]);
     const candidates = new Set();
-    for (const d of [-3,-2,-1,1,2,3,4,-4]) {
-      const v = sum + d; if (v >= 0 && v <= 20) candidates.add(v);
+    
+    // Plausible Falschantworten je nach Operation
+    if (this.operation === 'addition' || this.operation === 'subtraction') {
+      for (const d of [-3,-2,-1,1,2,3,4,-4]) {
+        const v = result + d; 
+        if (v >= 0 && v <= this.maxResult) candidates.add(v);
+      }
+    } else if (this.operation === 'multiplication') {
+      // Falsche Multiplikationsergebnisse
+      for (const d of [-2,-1,1,2]) {
+        const v1 = (a + d) * b;
+        const v2 = a * (b + d);
+        if (v1 >= 0 && v1 <= this.maxResult && v1 !== result) candidates.add(v1);
+        if (v2 >= 0 && v2 <= this.maxResult && v2 !== result) candidates.add(v2);
+      }
+    } else if (this.operation === 'division') {
+      // Falsche Divisionsergebnisse
+      for (const d of [-2,-1,1,2]) {
+        const v = result + d;
+        if (v >= 1 && v <= this.maxResult) candidates.add(v);
+      }
     }
-    while (candidates.size < 8) candidates.add(Math.floor(Math.random() * 21));
+
+    // Zusätzliche zufällige Kandidaten falls nötig
+    while (candidates.size < 8) {
+      const v = Math.floor(Math.random() * (this.maxResult + 1));
+      if (v >= 0) candidates.add(v);
+    }
+
     const wrong = [];
-    for (const v of candidates) { if (!answers.has(v)) { wrong.push(v); answers.add(v); } if (wrong.length >= 3) break; }
+    for (const v of candidates) { 
+      if (!answers.has(v)) { 
+        wrong.push(v); 
+        answers.add(v); 
+      } 
+      if (wrong.length >= 3) break; 
+    }
 
     // 4 Werte verteilen
     const values = Array(Math.min(4, this.blocks.length)).fill(null);
-    if (values.length > 0) values[this.correctIndex] = sum;
+    if (values.length > 0) values[this.correctIndex] = result;
     let wi = 0;
-    for (let i=0;i<values.length;i++) { if (i !== this.correctIndex) values[i] = wrong[wi++]; }
+    for (let i=0;i<values.length;i++) { 
+      if (i !== this.correctIndex) values[i] = wrong[wi++] || Math.floor(Math.random() * (this.maxResult + 1)); 
+    }
 
     // Auf die Blöcke mappen
     for (let i=0;i<values.length;i++) this._setBlockNumber(this.blocks[i], values[i]);

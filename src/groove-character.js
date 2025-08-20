@@ -97,9 +97,9 @@ export class GrooveCharacterManager {
     const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(viewerQuat).normalize();
     const right = new THREE.Vector3(1, 0, 0).applyQuaternion(viewerQuat).normalize();
     
-    // Position: links hinter dem vorderen Block am Boden
+    // Position: links hinter dem vorderen Block am Boden (50 cm hinter dem Block)
     this.characterPosition = viewerPos.clone()
-      .add(forward.clone().multiplyScalar(1.0))  // hinter dem vorderen Block (Block ist bei 0.8m)
+      .add(forward.clone().multiplyScalar(1.3))  // 50 cm hinter dem vorderen Block (Block ist bei 0.8m)
       .add(right.clone().multiplyScalar(-0.6));  // links versetzt
     
     // Y-Position auf Boden setzen (0 für local-floor reference space)

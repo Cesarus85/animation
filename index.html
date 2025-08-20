@@ -20,6 +20,31 @@
   <main id="ui-root">
     <h1>AR Mathespiel</h1>
     <p>Tippe auf „Starte AR". 4 Würfel erscheinen um dich herum. Löse die Rechenaufgaben, indem du den Würfel mit der richtigen Antwort schlägst!</p>
+    
+    <div class="settings">
+      <h3>Spieleinstellungen</h3>
+      
+      <div class="setting-group">
+        <label for="operation">Rechenoperation:</label>
+        <select id="operation">
+          <option value="addition">Addition (+)</option>
+          <option value="subtraction">Subtraktion (-)</option>
+          <option value="multiplication">Multiplikation (×)</option>
+          <option value="division">Division (÷)</option>
+        </select>
+      </div>
+      
+      <div class="setting-group">
+        <label for="max-result">Maximales Ergebnis:</label>
+        <select id="max-result">
+          <option value="10">10</option>
+          <option value="20" selected>20</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+      </div>
+    </div>
+    
     <button id="start-ar">Starte AR</button>
 
     <div id="hud" hidden>
