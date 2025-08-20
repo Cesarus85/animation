@@ -12,9 +12,12 @@ startBtn.addEventListener('click', async () => {
   try {
     startBtn.disabled = true;
     
-    // Spieleinstellungen lesen
-    const operation = document.getElementById('operation').value;
-    const maxResult = parseInt(document.getElementById('max-result').value);
+    // Spieleinstellungen aus Custom Dropdowns lesen
+    const operationDropdown = document.getElementById('operation-dropdown');
+    const maxResultDropdown = document.getElementById('max-result-dropdown');
+    
+    const operation = operationDropdown.querySelector('.dropdown-selected').dataset.value;
+    const maxResult = parseInt(maxResultDropdown.querySelector('.dropdown-selected').dataset.value);
     
     // Einstellungen an die App weitergeben
     app.setGameSettings(operation, maxResult);

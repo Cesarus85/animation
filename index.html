@@ -25,23 +25,29 @@
       <h3>Spieleinstellungen</h3>
       
       <div class="setting-group">
-        <label for="operation">Rechenoperation:</label>
-        <select id="operation">
-          <option value="addition">Addition (+)</option>
-          <option value="subtraction">Subtraktion (-)</option>
-          <option value="multiplication">Multiplikation (×)</option>
-          <option value="division">Division (÷)</option>
-        </select>
+        <label>Rechenoperation:</label>
+        <div class="custom-dropdown" id="operation-dropdown">
+          <div class="dropdown-selected" data-value="addition">Addition (+)</div>
+          <div class="dropdown-options" hidden>
+            <div class="dropdown-option" data-value="addition">Addition (+)</div>
+            <div class="dropdown-option" data-value="subtraction">Subtraktion (-)</div>
+            <div class="dropdown-option" data-value="multiplication">Multiplikation (×)</div>
+            <div class="dropdown-option" data-value="division">Division (÷)</div>
+          </div>
+        </div>
       </div>
       
       <div class="setting-group">
-        <label for="max-result">Maximales Ergebnis:</label>
-        <select id="max-result">
-          <option value="10">10</option>
-          <option value="20" selected>20</option>
-          <option value="50">50</option>
-          <option value="100">100</option>
-        </select>
+        <label>Maximales Ergebnis:</label>
+        <div class="custom-dropdown" id="max-result-dropdown">
+          <div class="dropdown-selected" data-value="20">20</div>
+          <div class="dropdown-options" hidden>
+            <div class="dropdown-option" data-value="10">10</div>
+            <div class="dropdown-option selected" data-value="20">20</div>
+            <div class="dropdown-option" data-value="50">50</div>
+            <div class="dropdown-option" data-value="100">100</div>
+          </div>
+        </div>
       </div>
     </div>
     
@@ -63,5 +69,87 @@
   </main>
 
   <script type="module" src="./src/main.js"></script>
+  
+  <script>
+    // Custom Dropdown Funktionalität für VR-Browser
+    document.addEventListener('DOMContentLoaded', function() {
+      const dropdowns = document.querySelectorAll('.custom-dropdown');
+      
+      dropdowns.forEach(dropdown => {
+        const selected = dropdown.querySelector('.dropdown-selected');
+        const options = dropdown.querySelector('.dropdown-options');
+        const optionItems = dropdown.querySelectorAll('.dropdown-option');
+        
+        // Touch/Click Events für bessere VR-Kompatibilität
+        function addMultiEventListener(element, events, handler) {
+          events.forEach(event => {
+            element.addEventListener(event, handler, { passive: false });
+          });
+        }
+        
+        // Dropdown öffnen/schließen
+        addMultiEventListener(selected, ['click', 'touchstart'], function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          // Andere Dropdowns schließen
+          dropdowns.forEach(otherDropdown => {
+            if (otherDropdown !== dropdown) {
+              otherDropdown.querySelector('.dropdown-selected').classList.remove('active');
+              otherDropdown.querySelector('.dropdown-options').hidden = true;
+            }
+          });
+          
+          // Aktuelles Dropdown togglen
+          const isOpen = !options.hidden;
+          options.hidden = isOpen;
+          selected.classList.toggle('active', !isOpen);
+        });
+        
+        // Option auswählen
+        optionItems.forEach(option => {
+          addMultiEventListener(option, ['click', 'touchstart'], function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Auswahl aktualisieren
+            const value = option.dataset.value;
+            const text = option.textContent;
+            
+            selected.dataset.value = value;
+            selected.textContent = text;
+            
+            // Selektierte Option markieren
+            optionItems.forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+            
+            // Dropdown schließen
+            options.hidden = true;
+            selected.classList.remove('active');
+          });
+        });
+      });
+      
+      // Dropdown schließen bei Klick außerhalb
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.custom-dropdown')) {
+          dropdowns.forEach(dropdown => {
+            dropdown.querySelector('.dropdown-selected').classList.remove('active');
+            dropdown.querySelector('.dropdown-options').hidden = true;
+          });
+        }
+      });
+      
+      // Auch bei touchstart außerhalb schließen
+      document.addEventListener('touchstart', function(e) {
+        if (!e.target.closest('.custom-dropdown')) {
+          dropdowns.forEach(dropdown => {
+            dropdown.querySelector('.dropdown-selected').classList.remove('active');
+            dropdown.querySelector('.dropdown-options').hidden = true;
+          });
+        }
+      });
+    });
+  </script>
 </body>
 </html>
