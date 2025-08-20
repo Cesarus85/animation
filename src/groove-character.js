@@ -63,8 +63,8 @@ export class GrooveCharacterManager {
       const root = gltf.scene || gltf.scenes?.[0];
       if (!root) throw new Error(`${url} ohne Szene`);
 
-      // Charakter um 20% verkleinern
-      root.scale.setScalar(0.8);
+      // Charakter um 40% verkleinern (ursprünglich 20%, jetzt weitere 25%)
+      root.scale.setScalar(0.6);
       
       // Mixer für Animationen erstellen
       const mixer = new THREE.AnimationMixer(root);
@@ -97,9 +97,9 @@ export class GrooveCharacterManager {
     const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(viewerQuat).normalize();
     const right = new THREE.Vector3(1, 0, 0).applyQuaternion(viewerQuat).normalize();
     
-    // Position: links vor dem Viewer am Boden
+    // Position: links hinter dem vorderen Block am Boden
     this.characterPosition = viewerPos.clone()
-      .add(forward.clone().multiplyScalar(0.8))  // vor dem Viewer
+      .add(forward.clone().multiplyScalar(1.0))  // hinter dem vorderen Block (Block ist bei 0.8m)
       .add(right.clone().multiplyScalar(-0.6));  // links versetzt
     
     // Y-Position auf Boden setzen (0 für local-floor reference space)

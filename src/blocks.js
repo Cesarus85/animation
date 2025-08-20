@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-const FORWARD_DIST = 1.0;
+const FORWARD_DIST = 0.8;
 const HEIGHT_OFFSET = 0.40;
 const BLOCK_TARGET_SIZE = 0.30;
 const IDLE_ROT_SPEED = 0.25;
