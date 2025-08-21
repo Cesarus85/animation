@@ -202,13 +202,18 @@ export class MathGame {
     const group = new THREE.Group();
     const size = BLOCK_TARGET_SIZE;
     let offset = size / 2 + EPSILON;
+    let cubeCenter = new THREE.Vector3(0, 0, 0);
 
-    // Optional: tatsächliche Blockgröße ermitteln
+    // Tatsächliche Blockgröße und -zentrum ermitteln
     if (block?.mesh) {
       const box = new THREE.Box3().setFromObject(block.mesh);
       const dims = new THREE.Vector3();
       box.getSize(dims);
+      box.getCenter(cubeCenter);
       offset = Math.max(dims.x, dims.z) / 2 + EPSILON;
+      
+      // Cube center in lokalen Koordinaten des Blocks (relativ zur Mesh-Position)
+      cubeCenter.sub(block.mesh.position);
     }
 
     const createPlane = (rotY) => {
@@ -227,7 +232,8 @@ export class MathGame {
         new THREE.Vector3(0, 1, 0), rotY
       );
       mesh.quaternion.copy(q);
-      mesh.position.set(0, 0, offset).applyQuaternion(q);
+      // Position auf der Würfelfläche, zentriert auf den tatsächlichen Würfelmittelpunkt
+      mesh.position.set(cubeCenter.x, cubeCenter.y, cubeCenter.z + offset).applyQuaternion(q);
       group.add(mesh);
     };
 
