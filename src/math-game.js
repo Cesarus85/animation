@@ -228,12 +228,15 @@ export class MathGame {
       const mesh = new THREE.Mesh(geometry, material);
       mesh.renderOrder = 2000;
       mesh.frustumCulled = false;
-      const q = new THREE.Quaternion().setFromAxisAngle(
-        new THREE.Vector3(0, 1, 0), rotY
-      );
-      mesh.quaternion.copy(q);
+      
+      // Plane rotieren um zur entsprechenden Würfelfläche zu zeigen
+      const qY = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rotY);
+      // Zusätzliche Rotation um 180° um X-Achse damit die Plane nach außen zeigt
+      const qX = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
+      mesh.quaternion.multiplyQuaternions(qY, qX);
+      
       // Position auf der Würfelfläche, zentriert auf den tatsächlichen Würfelmittelpunkt
-      mesh.position.set(cubeCenter.x, cubeCenter.y, cubeCenter.z + offset).applyQuaternion(q);
+      mesh.position.set(cubeCenter.x, cubeCenter.y, cubeCenter.z + offset).applyQuaternion(qY);
       group.add(mesh);
     };
 
