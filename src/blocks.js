@@ -93,8 +93,6 @@ export class BlocksManager {
       mesh.position.copy(pos);
       const look = new THREE.Vector3(viewerPos.x, mesh.position.y, viewerPos.z);
       mesh.lookAt(look);
-      // Add 90-degree Y-axis rotation to starting position
-      mesh.rotateY(Math.PI / 2);
       mesh.frustumCulled = true;
       this.scene.add(mesh);
 
