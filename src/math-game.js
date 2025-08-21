@@ -223,11 +223,15 @@ export class MathGame {
       const mesh = new THREE.Mesh(geometry, material);
       mesh.renderOrder = 2000;
       mesh.frustumCulled = false;
-      const q = new THREE.Quaternion().setFromAxisAngle(
-        new THREE.Vector3(0, 1, 0), rotY
-      );
-      mesh.quaternion.copy(q);
+
+      // Rotate plane around Y and Z axes so text is oriented correctly
+      // If the texture appears mirrored, replace Math.PI / 2 with -Math.PI / 2
+      mesh.rotation.set(0, rotY, Math.PI / 2);
+
+      // Position the plane at the block face using the combined rotation
+      const q = new THREE.Quaternion().setFromEuler(mesh.rotation);
       mesh.position.set(0, 0, offset).applyQuaternion(q);
+
       group.add(mesh);
     };
 
