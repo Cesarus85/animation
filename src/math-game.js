@@ -227,7 +227,7 @@ export class MathGame {
         new THREE.Vector3(0, 1, 0), rotY
       );
       mesh.quaternion.copy(q);
-      mesh.position.set(0, 0, offset).applyQuaternion(q);
+      mesh.position.set(0, offset, 0).applyQuaternion(q);
       group.add(mesh);
     };
 
@@ -263,12 +263,6 @@ export class MathGame {
     // Start with a transparent canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Rotiere den Kontext um 90 Grad im Uhrzeigersinn um die Mitte
-    ctx.save();
-    ctx.translate(canvas.width/2, canvas.height/2);
-    ctx.rotate(Math.PI / 2);
-    ctx.translate(-canvas.width/2, -canvas.height/2);
-
     // Text
     ctx.font = 'bold 80px system-ui, Arial, sans-serif';
     ctx.textAlign = 'center';
@@ -281,8 +275,6 @@ export class MathGame {
     // Weißer Text
     ctx.fillStyle = '#ffffff';
     ctx.fillText(text, canvas.width/2, canvas.height/2);
-
-    ctx.restore();
 
     const tex = new THREE.CanvasTexture(canvas);
     tex.anisotropy = 4;
