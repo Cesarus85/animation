@@ -202,18 +202,13 @@ export class MathGame {
     const group = new THREE.Group();
     const size = BLOCK_TARGET_SIZE;
     let offset = size / 2 + EPSILON;
-    let cubeCenter = new THREE.Vector3(0, 0, 0);
 
-    // Tatsächliche Blockgröße und -zentrum ermitteln
+    // Optional: tatsächliche Blockgröße ermitteln
     if (block?.mesh) {
       const box = new THREE.Box3().setFromObject(block.mesh);
       const dims = new THREE.Vector3();
       box.getSize(dims);
-      box.getCenter(cubeCenter);
       offset = Math.max(dims.x, dims.z) / 2 + EPSILON;
-      
-      // Cube center in lokalen Koordinaten des Blocks (relativ zur Mesh-Position)
-      cubeCenter.sub(block.mesh.position);
     }
 
     const createPlane = (rotY) => {
@@ -228,15 +223,11 @@ export class MathGame {
       const mesh = new THREE.Mesh(geometry, material);
       mesh.renderOrder = 2000;
       mesh.frustumCulled = false;
-      
-      // Plane rotieren um zur entsprechenden Würfelfläche zu zeigen
-      const qY = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rotY);
-      // Zusätzliche Rotation um 180° um X-Achse damit die Plane nach außen zeigt
-      const qX = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
-      mesh.quaternion.multiplyQuaternions(qY, qX);
-      
-      // Position auf der Würfelfläche, zentriert auf den tatsächlichen Würfelmittelpunkt
-      mesh.position.set(cubeCenter.x, cubeCenter.y, cubeCenter.z + offset).applyQuaternion(qY);
+      const q = new THREE.Quaternion().setFromAxisAngle(
+        new THREE.Vector3(0, 1, 0), rotY
+      );
+      mesh.quaternion.copy(q);
+      mesh.position.set(0, 0, offset).applyQuaternion(q);
       group.add(mesh);
     };
 
