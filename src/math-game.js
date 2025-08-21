@@ -227,7 +227,7 @@ export class MathGame {
         new THREE.Vector3(0, 1, 0), rotY
       );
       mesh.quaternion.copy(q);
-      mesh.position.set(0, offset, 0).applyQuaternion(q);
+      mesh.position.set(0, 0, offset).applyQuaternion(q);
       group.add(mesh);
     };
 
