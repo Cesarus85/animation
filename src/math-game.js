@@ -32,8 +32,6 @@ export class MathGame {
         b.mesh.add(b.numberDisplay);
         const inv = 1 / b.mesh.scale.x;      // Würfel ist uniform skaliert
         b.numberDisplay.scale.setScalar(inv);
-        // Align number display with cube faces so numbers face outward
-        b.numberDisplay.rotation.y = Math.PI / 2;
         // Falls der Würfel später nicht uniform skaliert wird, separate Faktoren für x, y, z setzen.
       }
     });
@@ -225,15 +223,11 @@ export class MathGame {
       const mesh = new THREE.Mesh(geometry, material);
       mesh.renderOrder = 2000;
       mesh.frustumCulled = false;
-
-      // Rotate plane around Y and Z axes so text is oriented correctly
-      // Rotate only around the Y axis so the planes are not twisted around Z
-      mesh.rotation.y = rotY;
-
-      // Position the plane at the block face using the combined rotation
-      const q = new THREE.Quaternion().setFromEuler(mesh.rotation);
+      const q = new THREE.Quaternion().setFromAxisAngle(
+        new THREE.Vector3(0, 1, 0), rotY
+      );
+      mesh.quaternion.copy(q);
       mesh.position.set(0, 0, offset).applyQuaternion(q);
-
       group.add(mesh);
     };
 
@@ -269,6 +263,12 @@ export class MathGame {
     // Start with a transparent canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Rotiere den Kontext um 90 Grad im Uhrzeigersinn um die Mitte
+    ctx.save();
+    ctx.translate(canvas.width/2, canvas.height/2);
+    ctx.rotate(Math.PI / 2);
+    ctx.translate(-canvas.width/2, -canvas.height/2);
+
     // Text
     ctx.font = 'bold 80px system-ui, Arial, sans-serif';
     ctx.textAlign = 'center';
@@ -281,6 +281,8 @@ export class MathGame {
     // Weißer Text
     ctx.fillStyle = '#ffffff';
     ctx.fillText(text, canvas.width/2, canvas.height/2);
+
+    ctx.restore();
 
     const tex = new THREE.CanvasTexture(canvas);
     tex.anisotropy = 4;
