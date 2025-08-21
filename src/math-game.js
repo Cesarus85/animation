@@ -32,6 +32,8 @@ export class MathGame {
         b.mesh.add(b.numberDisplay);
         const inv = 1 / b.mesh.scale.x;      // Würfel ist uniform skaliert
         b.numberDisplay.scale.setScalar(inv);
+        // Align number display with cube faces so numbers face outward
+        b.numberDisplay.rotation.y = Math.PI / 2;
         // Falls der Würfel später nicht uniform skaliert wird, separate Faktoren für x, y, z setzen.
       }
     });
@@ -225,8 +227,8 @@ export class MathGame {
       mesh.frustumCulled = false;
 
       // Rotate plane around Y and Z axes so text is oriented correctly
-      // If the texture appears mirrored, replace Math.PI / 2 with -Math.PI / 2
-      mesh.rotation.set(0, rotY, Math.PI / 2);
+      // Rotate only around the Y axis so the planes are not twisted around Z
+      mesh.rotation.y = rotY;
 
       // Position the plane at the block face using the combined rotation
       const q = new THREE.Quaternion().setFromEuler(mesh.rotation);
