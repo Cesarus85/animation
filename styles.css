@@ -153,5 +153,6 @@ button:active { filter: brightness(0.95); }
   font-weight: 800;
   font-size: 1.1rem;
   z-index: 10000;
+  white-space: pre-line;
 }
 

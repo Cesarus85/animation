@@ -96,18 +96,26 @@ export class EquationDisplay {
     ctx.lineWidth = 3;
     ctx.strokeRect(0, 0, canvas.width, canvas.height);
 
-    // Text
+    // Text (unterstützt mehrere Zeilen)
+    const lines = text.split('\n');
+    const lineHeight = 64;
+    const totalHeight = lineHeight * lines.length;
+
     ctx.font = 'bold 64px system-ui, Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Schatten
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.fillText(text, canvas.width/2 + 2, canvas.height/2 + 2);
+    lines.forEach((line, i) => {
+      const y = canvas.height / 2 - totalHeight / 2 + lineHeight * i + lineHeight / 2;
 
-    // Textfarbe
-    ctx.fillStyle = color;
-    ctx.fillText(text, canvas.width/2, canvas.height/2);
+      // Schatten
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.fillText(line, canvas.width / 2 + 2, y + 2);
+
+      // Textfarbe
+      ctx.fillStyle = color;
+      ctx.fillText(line, canvas.width / 2, y);
+    });
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.anisotropy = 4;
