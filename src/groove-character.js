@@ -7,6 +7,13 @@ const ANIMATION_DURATION = 2000; // 2 Sekunden in Milliseconds
 const CROSSFADE_DURATION = 0.5; // 0.5 Sekunden für weiche Übergänge
 const STATS_BOARD_DISTANCE = 0.8; // Distanz der Statistik-Tafel hinter der Figur in Metern
 
+// Wiederverwendbare temporäre Objekte zur Vermeidung von Garbage Collection
+const _tmpVec1 = new THREE.Vector3();
+const _tmpVec2 = new THREE.Vector3();
+const _tmpVec3 = new THREE.Vector3();
+const _tmpQuat1 = new THREE.Quaternion();
+const _tmpObj = new THREE.Object3D();
+
 export class GrooveCharacterManager {
   constructor(scene) {
     this.scene = scene;
@@ -105,23 +112,22 @@ export class GrooveCharacterManager {
 
   placeCharacter(viewerPos, viewerQuat) {
     // Berechne Position links vor dem Viewer am Boden
-    const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(viewerQuat).normalize();
-    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(viewerQuat).normalize();
-    
+    const forward = _tmpVec1.set(0, 0, -1).applyQuaternion(viewerQuat).normalize();
+    const right = _tmpVec2.set(1, 0, 0).applyQuaternion(viewerQuat).normalize();
+
     // Position: links hinter dem vorderen Block am Boden (50 cm hinter dem Block)
-    this.characterPosition = viewerPos.clone()
-      .add(forward.clone().multiplyScalar(1.3))  // 50 cm hinter dem vorderen Block (Block ist bei 0.8m)
-      .add(right.clone().multiplyScalar(-0.6));  // links versetzt
-    
+    this.characterPosition.copy(viewerPos)
+      .add(forward.multiplyScalar(1.3))  // 50 cm hinter dem vorderen Block (Block ist bei 0.8m)
+      .add(right.multiplyScalar(-0.6));  // links versetzt
+
     // Y-Position auf Boden setzen (0 für local-floor reference space)
     this.characterPosition.y = 0;
 
     // Rotation berechnen (zum Viewer schauen)
-    const lookAtPos = new THREE.Vector3(viewerPos.x, this.characterPosition.y, viewerPos.z);
-    const tempObj = new THREE.Object3D();
-    tempObj.position.copy(this.characterPosition);
-    tempObj.lookAt(lookAtPos);
-    this.characterQuaternion.copy(tempObj.quaternion);
+    const lookAtPos = _tmpVec3.set(viewerPos.x, this.characterPosition.y, viewerPos.z);
+    _tmpObj.position.copy(this.characterPosition);
+    _tmpObj.lookAt(lookAtPos);
+    this.characterQuaternion.copy(_tmpQuat1.copy(_tmpObj.quaternion));
 
     // Ersten Charakter (warten1) platzieren
     this._switchToModel('warten1');
@@ -213,14 +219,13 @@ export class GrooveCharacterManager {
 
   _updateStatsBoardTransform() {
     if (!this.statsBoard?.mesh) return;
-    const behind = new THREE.Vector3(0, 0, -1)
+    const behind = _tmpVec1.set(0, 0, -1)
       .applyQuaternion(this.characterQuaternion)
       .multiplyScalar(STATS_BOARD_DISTANCE);
-    const pos = this.characterPosition.clone()
-      .add(behind)
-      .add(new THREE.Vector3(0, 1.5, 0));
+    const pos = _tmpVec2.copy(this.characterPosition).add(behind);
+    pos.y += 1.5;
     this.statsBoard.mesh.position.copy(pos);
-    this.statsBoard.mesh.quaternion.copy(this.characterQuaternion);
+    this.statsBoard.mesh.quaternion.copy(_tmpQuat1.copy(this.characterQuaternion));
   }
 
   // Methode für richtige Antwort
