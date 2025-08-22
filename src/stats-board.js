@@ -5,6 +5,7 @@ export class StatsBoard {
   constructor() {
     this.correct = 0;
     this.wrong = 0;
+    this.lives = 3;
 
     // Canvas setup
     this.canvas = document.createElement('canvas');
@@ -41,9 +42,15 @@ export class StatsBoard {
     this.updateDisplay();
   }
 
+  setLives(value) {
+    this.lives = value;
+    this.updateDisplay();
+  }
+
   reset() {
     this.correct = 0;
     this.wrong = 0;
+    this.lives = 3;
     this.updateDisplay();
   }
 
@@ -64,7 +71,7 @@ export class StatsBoard {
     ctx.font = 'bold 48px system-ui, Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const text = `Richtig: ${this.correct} | Falsch: ${this.wrong}`;
+    const text = `Richtig: ${this.correct} | Falsch: ${this.wrong} | Leben: ${this.lives}`;
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
     ctx.fillText(text, w / 2 + 2, h / 2 + 2);
