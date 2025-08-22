@@ -7,6 +7,43 @@ const app = new XRApp(ui);
 const startBtn = document.getElementById('start-ar');
 const endBtn = document.getElementById('end');
 
+// Dropdowns initialisieren und Werte aus localStorage laden
+function initDropdown(dropdownId, storageKey, fallback) {
+  const dropdown = document.getElementById(dropdownId);
+  if (!dropdown) return;
+
+  const selected = dropdown.querySelector('.dropdown-selected');
+  const options = dropdown.querySelectorAll('.dropdown-option');
+
+  // gespeicherten Wert lesen oder Fallback nutzen
+  const storedValue = localStorage.getItem(storageKey) || fallback;
+  const option = dropdown.querySelector(`.dropdown-option[data-value="${storedValue}"]`);
+  const finalValue = option ? storedValue : fallback;
+
+  // Anzeige aktualisieren
+  const finalOption = option || dropdown.querySelector(`.dropdown-option[data-value="${fallback}"]`);
+  if (finalOption && selected) {
+    selected.dataset.value = finalValue;
+    selected.textContent = finalOption.textContent;
+  }
+
+  // Option markieren und Listener zum Speichern setzen
+  options.forEach(opt => {
+    opt.classList.toggle('selected', opt === finalOption);
+    ['click', 'touchstart'].forEach(evt => {
+      opt.addEventListener(evt, () => {
+        localStorage.setItem(storageKey, opt.dataset.value);
+      });
+    });
+  });
+
+  // Sicherstellen, dass der aktuelle Wert gespeichert ist
+  localStorage.setItem(storageKey, finalValue);
+}
+
+initDropdown('operation-dropdown', 'operation', 'addition');
+initDropdown('max-result-dropdown', 'maxResult', '20');
+
 // Callback für Session-Ende setzen
 app.onSessionEnd = () => {
   console.log('AR-Session beendet - UI zurücksetzen');
@@ -53,9 +90,13 @@ startBtn.addEventListener('click', async () => {
     
     const operation = operationSelected.dataset.value || 'addition';
     const maxResult = parseInt(maxResultSelected.dataset.value) || 20;
-    
+
     console.log('Einstellungen gelesen:', { operation, maxResult });
-    
+
+    // Aktuelle Auswahl speichern
+    localStorage.setItem('operation', operation);
+    localStorage.setItem('maxResult', String(maxResult));
+
     // Einstellungen an die App weitergeben
     app.setGameSettings(operation, maxResult);
     
