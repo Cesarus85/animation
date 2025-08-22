@@ -215,7 +215,7 @@ export class GrooveCharacterManager {
     if (!this.statsBoard?.mesh) return;
     const behind = new THREE.Vector3(0, 0, -1)
       .applyQuaternion(this.characterQuaternion)
-      .multiplyScalar(-STATS_BOARD_DISTANCE);
+      .multiplyScalar(STATS_BOARD_DISTANCE);
     const pos = this.characterPosition.clone()
       .add(behind)
       .add(new THREE.Vector3(0, 1.5, 0));
