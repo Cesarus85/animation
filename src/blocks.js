@@ -13,17 +13,13 @@ const BOUNCE_DURATION  = 0.35;
 const REARM_NO_CONTACT_FRAMES = 8;
 const MIN_FIRE_INTERVAL_S      = 0.35;
 
-// Performance: AABB nicht jeden Frame neu (bei langsamer Idle-Rotation reicht 1/3)
-const AABB_REFRESH_RATE = 3; // alle 3 Frames
-
 export class BlocksManager {
   constructor(scene) {
     this.scene = scene;
     this.loader = new GLTFLoader();
     this.template = null;
-    this.blocks = []; // {mesh,aabb,bounceT,basePos,armed,noContactFrames,lastFireAt}
+    this.blocks = []; // {mesh,aabb,bounceT,basePos,armed,noContactFrames,lastFireAt,needsAabbUpdate}
     this._placed = false;
-    this._frameCounter = 0;
     // Reusable temporaries
     this._tmpCenter = new THREE.Vector3();
     this._tmpClosest = new THREE.Vector3();
@@ -103,14 +99,14 @@ export class BlocksManager {
         basePos: mesh.position.clone(),
         armed: true,
         noContactFrames: 0,
-        lastFireAt: -Infinity
+        lastFireAt: -Infinity,
+        needsAabbUpdate: false
       });
     }
   }
 
   updateIdle(dtMs) {
     const dt = (dtMs ?? 16.666) / 1000;
-    this._frameCounter++;
 
     // Notbremse
     if (this.blocks.length > 4) {
@@ -121,6 +117,7 @@ export class BlocksManager {
     // Rotation + Bounce
     for (const b of this.blocks) {
       b.mesh.rotateY(IDLE_ROT_SPEED * dt);
+      b.needsAabbUpdate = true;
       if (b.bounceT > 0) {
         b.bounceT = Math.min(BOUNCE_DURATION, b.bounceT + dt);
         const k = b.bounceT / BOUNCE_DURATION;
@@ -130,10 +127,7 @@ export class BlocksManager {
           b.bounceT = 0;
           b.mesh.position.copy(b.basePos);
         }
-      }
-      // AABB nur alle N Frames refreshen
-      if (this._frameCounter % AABB_REFRESH_RATE === 0) {
-        b.aabb.setFromObject(b.mesh);
+        b.needsAabbUpdate = true;
       }
     }
   }
@@ -144,8 +138,10 @@ export class BlocksManager {
     const now = performance.now() / 1000;
 
     for (const block of this.blocks) {
-      // bei seltenerem Refresh evtl. initial sicherstellen:
-      block.aabb.setFromObject(block.mesh);
+      if (block.needsAabbUpdate) {
+        block.aabb.setFromObject(block.mesh);
+        block.needsAabbUpdate = false;
+      }
 
       let anyContact = false; let fired = false;
 
