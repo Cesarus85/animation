@@ -4,6 +4,7 @@ export class UI {
     this.hud = document.getElementById('hud');
     this.scoreEl = document.getElementById('score');
     this.livesEl = document.getElementById('lives');
+    this.timerEl = document.getElementById('timer');
     this.fpsEl = document.getElementById('fps');
     this._toastTimer = null;
 
@@ -42,6 +43,7 @@ export class UI {
 
   setScore(v) { if (this.scoreEl) this.scoreEl.textContent = `Score: ${v}`; }
   setLives(v) { if (this.livesEl) this.livesEl.textContent = `Lives: ${v}`; }
+  setTimer(v) { if (this.timerEl) this.timerEl.textContent = `Zeit: ${v}`; }
   setFps(fps) { if (this.fpsEl) this.fpsEl.textContent = `FPS: ${fps}`; }
 
   setEquation(text, color = '#ffffff') {

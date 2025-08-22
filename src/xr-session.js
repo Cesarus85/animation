@@ -46,6 +46,7 @@ export class XRApp {
     // Statistik
     this.wrongCount = 0;
     this.lives = 3;
+    this.timeLeft = 60;
     this._gameOverShown = false;
 
     // Spieleinstellungen
@@ -94,6 +95,16 @@ export class XRApp {
       this.ui.setLives?.('-');             // oder HUD-Element verstecken
       this.grooveCharacter?.statsBoard?.setLives?.('-');
     }
+
+    // Timer je nach Spielmodus setzen
+    if (this.gameMode === 'timed') {
+      this.timeLeft = 60;
+      this.ui.setTimer?.(this.timeLeft);
+      this.grooveCharacter?.statsBoard?.setTime?.(this.timeLeft);
+    } else {
+      this.ui.setTimer?.('-');
+      this.grooveCharacter?.statsBoard?.setTime?.('-');
+    }
     
     // Spieleinstellungen an MathGame weitergeben
     this.math.setGameSettings(this.gameOperation, this.gameMaxResult);
@@ -137,6 +148,13 @@ export class XRApp {
           this.ui.setLives?.('-');
           this.grooveCharacter?.statsBoard?.setLives?.('-');
         }
+        if (this.gameMode === 'timed') {
+          this.ui.setTimer?.(0);
+          this.grooveCharacter?.statsBoard?.setTime?.(0);
+        } else {
+          this.ui.setTimer?.('-');
+          this.grooveCharacter?.statsBoard?.setTime?.('-');
+        }
       } catch {}
       this.cleanup();
       // Callback aufrufen, damit UI sich zurücksetzen kann
@@ -167,6 +185,11 @@ export class XRApp {
   showGameOver() {
     if (this._gameOverShown) return;
     this._gameOverShown = true;
+    if (this.gameMode === 'timed') {
+      this.timeLeft = 0;
+      this.ui.setTimer?.(0);
+      this.grooveCharacter?.statsBoard?.setTime?.(0);
+    }
     this.ui.setEquation?.('Game Over', '#ff0000');
     this.math?.equationDisplay?.updateEquation('Game Over', '#ff0000');
     setTimeout(() => this.end(), 4000);
@@ -179,6 +202,13 @@ export class XRApp {
     } else {
       this.ui.setLives?.('-');
       this.grooveCharacter?.statsBoard?.setLives?.('-');
+    }
+    if (this.gameMode === 'timed') {
+      this.ui.setTimer?.(0);
+      this.grooveCharacter?.statsBoard?.setTime?.(0);
+    } else {
+      this.ui.setTimer?.('-');
+      this.grooveCharacter?.statsBoard?.setTime?.('-');
     }
     // Animations-Loop stoppen
     try { this.renderer?.setAnimationLoop(null); } catch {}
@@ -219,6 +249,7 @@ export class XRApp {
     this._didWarmup = false;
     this.wrongCount = 0;
     this.lives = 3;
+    this.timeLeft = 60;
     this._gameOverShown = false;
   }
 
@@ -251,6 +282,16 @@ export class XRApp {
     if (this._gameOverShown) {
       this.renderer.render(this.sceneRig.scene, this.sceneRig.camera);
       return;
+    }
+
+    if (this.gameMode === 'timed') {
+      this.timeLeft -= dtMs / 1000;
+      const remaining = Math.ceil(this.timeLeft);
+      this.ui.setTimer?.(Math.max(0, remaining));
+      this.grooveCharacter?.statsBoard?.setTime?.(Math.max(0, remaining));
+      if (this.timeLeft <= 0) {
+        this.showGameOver();
+      }
     }
 
     // Einmalige Platzierung der Blöcke, wenn ViewerPose vorliegt
