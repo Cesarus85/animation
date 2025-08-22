@@ -45,6 +45,7 @@ export class XRApp {
 
     // Statistik
     this.wrongCount = 0;
+    this.maxLives = 3;
 
     // Spieleinstellungen
     this.gameOperation = 'addition';
@@ -76,10 +77,14 @@ export class XRApp {
     this.grooveCharacter = new GrooveCharacterManager(this.sceneRig.scene);
     this.audio  = new AudioManager();
     this.ui.setAudioManager?.(this.audio);
-    
+
+    // Statistik zurücksetzen
+    this.wrongCount = 0;
+    this.grooveCharacter?.statsBoard?.reset?.(this.maxLives);
+
     // Spieleinstellungen an MathGame weitergeben
     this.math.setGameSettings(this.gameOperation, this.gameMaxResult);
-    
+
     // AudioManager an GrooveCharacter weitergeben
     this.grooveCharacter.setAudioManager(this.audio);
 
@@ -134,6 +139,12 @@ export class XRApp {
       // Callback auch bei manuellem Beenden aufrufen
       if (this.onSessionEnd) this.onSessionEnd();
     }
+  }
+
+  onGameOver() {
+    try { this.renderer?.setAnimationLoop(null); } catch {}
+    try { this.ui.setHudVisible?.(false); } catch {}
+    this.end();
   }
 
   cleanup() {
@@ -264,8 +275,13 @@ export class XRApp {
           this.wrongCount++;
           this.grooveCharacter?.playIncorrectAnimation();
           this.grooveCharacter?.statsBoard?.incrementWrong();
+          this.grooveCharacter?.statsBoard?.decrementLives();
           // Bump-Sound abspielen
           this.audio?.playBumpSound();
+
+          if (this.wrongCount >= this.maxLives) {
+            this.onGameOver();
+          }
         }
       }
     }
