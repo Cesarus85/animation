@@ -9,13 +9,13 @@ export class StatsBoard {
 
     // Canvas setup
     this.canvas = document.createElement('canvas');
-    this.canvas.width = 512;
-    this.canvas.height = 128;
+    this.canvas.width = 768;
+    this.canvas.height = 192;
     this.ctx = this.canvas.getContext('2d');
 
     // Texture + material
     this.texture = new THREE.CanvasTexture(this.canvas);
-    this.geometry = new THREE.PlaneGeometry(0.6, 0.15);
+    this.geometry = new THREE.PlaneGeometry(0.9, 0.225);
     this.material = new THREE.MeshBasicMaterial({
       map: this.texture,
       transparent: true,
@@ -71,13 +71,16 @@ export class StatsBoard {
     ctx.font = 'bold 48px system-ui, Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const text = `Richtig: ${this.correct} | Falsch: ${this.wrong} | Leben: ${this.lives}`;
+    const line1 = `Richtig: ${this.correct} | Falsch: ${this.wrong}`;
+    const line2 = `Leben: ${this.lives}`;
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.fillText(text, w / 2 + 2, h / 2 + 2);
+    ctx.fillText(line1, w / 2 + 2, h / 2 - 24 + 2);
+    ctx.fillText(line2, w / 2 + 2, h / 2 + 24 + 2);
 
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(text, w / 2, h / 2);
+    ctx.fillText(line1, w / 2, h / 2 - 24);
+    ctx.fillText(line2, w / 2, h / 2 + 24);
 
     this.texture.needsUpdate = true;
   }
