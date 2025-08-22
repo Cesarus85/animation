@@ -5,7 +5,8 @@ export class StatsBoard {
   constructor() {
     this.correct = 0;
     this.wrong = 0;
-    this.lives = 3;
+    this.secondaryLabel = 'Leben';
+    this.secondaryValue = 3;
 
     // Canvas setup
     this.canvas = document.createElement('canvas');
@@ -43,14 +44,22 @@ export class StatsBoard {
   }
 
   setLives(value) {
-    this.lives = value;
+    this.secondaryLabel = 'Leben';
+    this.secondaryValue = value;
+    this.updateDisplay();
+  }
+
+  setTime(value) {
+    this.secondaryLabel = 'Zeit';
+    this.secondaryValue = value;
     this.updateDisplay();
   }
 
   reset() {
     this.correct = 0;
     this.wrong = 0;
-    this.lives = 3;
+    this.secondaryLabel = 'Leben';
+    this.secondaryValue = 3;
     this.updateDisplay();
   }
 
@@ -72,7 +81,7 @@ export class StatsBoard {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     const line1 = `Richtig: ${this.correct} | Falsch: ${this.wrong}`;
-    const line2 = `Leben: ${this.lives}`;
+    const line2 = `${this.secondaryLabel}: ${this.secondaryValue}`;
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
     ctx.fillText(line1, w / 2 + 2, h / 2 - 24 + 2);

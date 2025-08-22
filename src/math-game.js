@@ -55,7 +55,7 @@ export class MathGame {
       if (this.failManager && hitPosition) {
         this.failManager.spawn(hitPosition, new THREE.Vector3(0, 1, 0));
       }
-      if (this.gameMode === 'endless') {
+      if (this.gameMode === 'endless' || this.gameMode === 'timed') {
         this._newProblem(false);
       }
     }
