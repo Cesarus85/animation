@@ -20,7 +20,8 @@ export class EquationDisplay {
       .add(new THREE.Vector3(0, -0.2, 0));
 
     // Plane für die Gleichung
-    const geometry = new THREE.PlaneGeometry(0.6, 0.15);
+    // Breitere Anzeige, um längere Gleichungen aufzunehmen
+    const geometry = new THREE.PlaneGeometry(1.0, 0.15);
     const material = new THREE.MeshBasicMaterial({
       transparent: true,
       side: THREE.DoubleSide,
@@ -83,7 +84,8 @@ export class EquationDisplay {
     if (this.texCache.has(key)) return this.texCache.get(key);
 
     const canvas = document.createElement('canvas');
-    canvas.width = 512;
+    // Größere Texturbreite, damit längere Zeilen nicht abgeschnitten werden
+    canvas.width = 1024;
     canvas.height = 128;
     const ctx = canvas.getContext('2d');
 
