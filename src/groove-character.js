@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { loadGltf } from './utils/load-gltf.js';
+import { StatsBoard } from './stats-board.js';
 
 const ANIMATION_DURATION = 2000; // 2 Sekunden in Milliseconds
 const CROSSFADE_DURATION = 0.5; // 0.5 Sekunden für weiche Übergänge
@@ -29,6 +30,9 @@ export class GrooveCharacterManager {
     this.isLoaded = false;
     this.characterPosition = new THREE.Vector3();
     this.characterQuaternion = new THREE.Quaternion();
+
+    // Statistik-Tafel
+    this.statsBoard = new StatsBoard();
     
     // Crossfade-System
     this.isTransitioning = false;
@@ -120,6 +124,12 @@ export class GrooveCharacterManager {
 
     // Ersten Charakter (warten1) platzieren
     this._switchToModel('warten1');
+
+    // StatsBoard hinter der Figur platzieren und zur Szene hinzufügen
+    if (this.statsBoard?.mesh && !this.statsBoard.mesh.parent) {
+      this.scene.add(this.statsBoard.mesh);
+    }
+    this._updateStatsBoardTransform();
   }
 
   _switchToModel(stateName, useTransition = false) {
@@ -148,6 +158,9 @@ export class GrooveCharacterManager {
 
     // Zur Szene hinzufügen
     this.scene.add(this.currentCharacter);
+
+    // StatsBoard ausrichten
+    this._updateStatsBoardTransform();
 
     // Animation starten
     if (model.actions.length > 0) {
@@ -197,6 +210,18 @@ export class GrooveCharacterManager {
     });
   }
 
+  _updateStatsBoardTransform() {
+    if (!this.statsBoard?.mesh) return;
+    const behind = new THREE.Vector3(0, 0, -1)
+      .applyQuaternion(this.characterQuaternion)
+      .multiplyScalar(-0.4);
+    const pos = this.characterPosition.clone()
+      .add(behind)
+      .add(new THREE.Vector3(0, 1.5, 0));
+    this.statsBoard.mesh.position.copy(pos);
+    this.statsBoard.mesh.quaternion.copy(this.characterQuaternion);
+  }
+
   // Methode für richtige Antwort
   playCorrectAnimation() {
     const animations = ['richtig1', 'richtig2'];
@@ -236,6 +261,9 @@ export class GrooveCharacterManager {
     if (this.currentMixer) {
       this.currentMixer.update(dt / 1000);
     }
+
+    // StatsBoard-Position aktualisieren
+    this._updateStatsBoardTransform();
 
     // Crossfade-Timer handhaben
     if (this.isTransitioning) {
@@ -321,6 +349,10 @@ export class GrooveCharacterManager {
         }
       }
     }
+
+    // StatsBoard entsorgen
+    this.statsBoard?.dispose();
+    this.statsBoard = null;
     
     // Reset aller Eigenschaften
     this.models = {

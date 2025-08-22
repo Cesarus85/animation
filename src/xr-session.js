@@ -141,6 +141,7 @@ export class XRApp {
     try { this.fails?.dispose?.(); } catch {}
     try { this.blocks?.dispose?.(); } catch {}
     try { this.coins?.dispose?.(); } catch {}
+    try { this.grooveCharacter?.statsBoard?.dispose?.(); } catch {}
     try { this.grooveCharacter?.dispose?.(); } catch {}
     try { this.audio?.dispose?.(); } catch {}
 
@@ -250,11 +251,13 @@ export class XRApp {
           this.ui.setScore?.(this.coins.score);
           // Groove Charakter: richtige Antwort Animation
           this.grooveCharacter?.playCorrectAnimation();
+          this.grooveCharacter?.statsBoard?.incrementCorrect();
           // Coin-Sound abspielen
           this.audio?.playCoinSound();
         } else {
           // Falsche Antwort → Groove Charakter Animation + Sound
           this.grooveCharacter?.playIncorrectAnimation();
+          this.grooveCharacter?.statsBoard?.incrementWrong();
           // Bump-Sound abspielen
           this.audio?.playBumpSound();
         }
