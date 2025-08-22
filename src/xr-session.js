@@ -83,10 +83,15 @@ export class XRApp {
     this.audio  = new AudioManager();
     this.ui.setAudioManager?.(this.audio);
 
-    // Lives zurücksetzen und anzeigen
-    this.lives = 3;
-    this.ui.setLives?.(this.lives);
-    this.grooveCharacter?.statsBoard?.setLives?.(this.lives);
+    // Lives je nach Spielmodus setzen bzw. ausblenden
+    if (this.gameMode === 'lives') {
+      this.lives = 3;
+      this.ui.setLives?.(this.lives);
+      this.grooveCharacter?.statsBoard?.setLives?.(this.lives);
+    } else {
+      this.ui.setLives?.('-');             // oder HUD-Element verstecken
+      this.grooveCharacter?.statsBoard?.setLives?.('-');
+    }
     
     // Spieleinstellungen an MathGame weitergeben
     this.math.setGameSettings(this.gameOperation, this.gameMaxResult);
@@ -122,8 +127,13 @@ export class XRApp {
     session.addEventListener('end', () => {
       try {
         this.ui.setHudVisible?.(false);
-        this.ui.setLives?.(0);
-        this.grooveCharacter?.statsBoard?.setLives?.(0);
+        if (this.gameMode === 'lives') {
+          this.ui.setLives?.(0);
+          this.grooveCharacter?.statsBoard?.setLives?.(0);
+        } else {
+          this.ui.setLives?.('-');
+          this.grooveCharacter?.statsBoard?.setLives?.('-');
+        }
       } catch {}
       this.cleanup();
       // Callback aufrufen, damit UI sich zurücksetzen kann
@@ -152,8 +162,13 @@ export class XRApp {
   }
 
   cleanup() {
-    this.ui.setLives?.(0);
-    this.grooveCharacter?.statsBoard?.setLives?.(0);
+    if (this.gameMode === 'lives') {
+      this.ui.setLives?.(0);
+      this.grooveCharacter?.statsBoard?.setLives?.(0);
+    } else {
+      this.ui.setLives?.('-');
+      this.grooveCharacter?.statsBoard?.setLives?.('-');
+    }
     // Animations-Loop stoppen
     try { this.renderer?.setAnimationLoop(null); } catch {}
 
