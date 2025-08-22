@@ -185,14 +185,18 @@ export class XRApp {
   showGameOver() {
     if (this._gameOverShown) return;
     this._gameOverShown = true;
+
+    let msg = 'Game Over';
+
     if (this.gameMode === 'timed') {
       this.timeLeft = 0;
       this.ui.setTimer?.(0);
       this.grooveCharacter?.statsBoard?.setTime?.(0);
+
+      // Anzahl richtig gelöster Aufgaben ermitteln
+      const solved = this.grooveCharacter?.statsBoard?.correct ?? 0;
+      msg += `\nGelöste Aufgaben: ${solved}`;
     }
-    // Anzahl richtig gelöster Aufgaben ermitteln
-    const solved = this.grooveCharacter?.statsBoard?.correct ?? 0;
-    const msg = `Game Over\nGelöste Aufgaben: ${solved}`;
 
     // HUD & 3D-Equation entsprechend erweitern
     this.ui.setEquation?.(msg, '#ff0000');
