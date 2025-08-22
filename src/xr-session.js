@@ -100,10 +100,10 @@ export class XRApp {
     if (this.gameMode === 'timed') {
       this.timeLeft = 60;
       this.ui.setTimer?.(this.timeLeft);
-      this.grooveCharacter?.statsBoard?.setTime?.(this.timeLeft);
+      this.grooveCharacter?.statsBoard?.setTimer?.(this.timeLeft);
     } else {
       this.ui.setTimer?.('-');
-      this.grooveCharacter?.statsBoard?.setTime?.('-');
+      this.grooveCharacter?.statsBoard?.setTimer?.('-');
     }
     
     // Spieleinstellungen an MathGame weitergeben
@@ -150,10 +150,10 @@ export class XRApp {
         }
         if (this.gameMode === 'timed') {
           this.ui.setTimer?.(0);
-          this.grooveCharacter?.statsBoard?.setTime?.(0);
+          this.grooveCharacter?.statsBoard?.setTimer?.(0);
         } else {
           this.ui.setTimer?.('-');
-          this.grooveCharacter?.statsBoard?.setTime?.('-');
+          this.grooveCharacter?.statsBoard?.setTimer?.('-');
         }
       } catch {}
       this.cleanup();
@@ -188,7 +188,7 @@ export class XRApp {
     if (this.gameMode === 'timed') {
       this.timeLeft = 0;
       this.ui.setTimer?.(0);
-      this.grooveCharacter?.statsBoard?.setTime?.(0);
+      this.grooveCharacter?.statsBoard?.setTimer?.(0);
     }
     this.ui.setEquation?.('Game Over', '#ff0000');
     this.math?.equationDisplay?.updateEquation('Game Over', '#ff0000');
@@ -205,10 +205,10 @@ export class XRApp {
     }
     if (this.gameMode === 'timed') {
       this.ui.setTimer?.(0);
-      this.grooveCharacter?.statsBoard?.setTime?.(0);
+      this.grooveCharacter?.statsBoard?.setTimer?.(0);
     } else {
       this.ui.setTimer?.('-');
-      this.grooveCharacter?.statsBoard?.setTime?.('-');
+      this.grooveCharacter?.statsBoard?.setTimer?.('-');
     }
     // Animations-Loop stoppen
     try { this.renderer?.setAnimationLoop(null); } catch {}
@@ -288,7 +288,7 @@ export class XRApp {
       this.timeLeft -= dtMs / 1000;
       const remaining = Math.ceil(this.timeLeft);
       this.ui.setTimer?.(Math.max(0, remaining));
-      this.grooveCharacter?.statsBoard?.setTime?.(Math.max(0, remaining));
+      this.grooveCharacter?.statsBoard?.setTimer?.(Math.max(0, remaining));
       if (this.timeLeft <= 0) {
         this.showGameOver();
       }

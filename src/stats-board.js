@@ -5,8 +5,8 @@ export class StatsBoard {
   constructor() {
     this.correct = 0;
     this.wrong = 0;
-    this.secondaryLabel = 'Leben';
-    this.secondaryValue = 3;
+    this.lives = 3;
+    this.timerValue = 0;
 
     // Canvas setup
     this.canvas = document.createElement('canvas');
@@ -44,22 +44,20 @@ export class StatsBoard {
   }
 
   setLives(value) {
-    this.secondaryLabel = 'Leben';
-    this.secondaryValue = value;
+    this.lives = value;
     this.updateDisplay();
   }
 
-  setTime(value) {
-    this.secondaryLabel = 'Zeit';
-    this.secondaryValue = value;
+  setTimer(value) {
+    this.timerValue = value;
     this.updateDisplay();
   }
 
   reset() {
     this.correct = 0;
     this.wrong = 0;
-    this.secondaryLabel = 'Leben';
-    this.secondaryValue = 3;
+    this.lives = 3;
+    this.timerValue = 0;
     this.updateDisplay();
   }
 
@@ -81,15 +79,22 @@ export class StatsBoard {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     const line1 = `Richtig: ${this.correct} | Falsch: ${this.wrong}`;
-    const line2 = `${this.secondaryLabel}: ${this.secondaryValue}`;
+    const line2 = `Leben: ${this.lives}`;
+    const line3 = `Zeit: ${this.timerValue}`;
+
+    const y1 = h / 4;
+    const y2 = h / 2;
+    const y3 = (3 * h) / 4;
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.fillText(line1, w / 2 + 2, h / 2 - 24 + 2);
-    ctx.fillText(line2, w / 2 + 2, h / 2 + 24 + 2);
+    ctx.fillText(line1, w / 2 + 2, y1 + 2);
+    ctx.fillText(line2, w / 2 + 2, y2 + 2);
+    ctx.fillText(line3, w / 2 + 2, y3 + 2);
 
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(line1, w / 2, h / 2 - 24);
-    ctx.fillText(line2, w / 2, h / 2 + 24);
+    ctx.fillText(line1, w / 2, y1);
+    ctx.fillText(line2, w / 2, y2);
+    ctx.fillText(line3, w / 2, y3);
 
     this.texture.needsUpdate = true;
   }
