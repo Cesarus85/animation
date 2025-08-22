@@ -44,8 +44,12 @@ export class UI {
   setLives(v) { if (this.livesEl) this.livesEl.textContent = `Lives: ${v}`; }
   setFps(fps) { if (this.fpsEl) this.fpsEl.textContent = `FPS: ${fps}`; }
 
-  setEquation(text) {
-    if (this.eqEl) { this.eqEl.textContent = text; this.eqEl.hidden = false; }
+  setEquation(text, color = '#ffffff') {
+    if (this.eqEl) {
+      this.eqEl.textContent = text;
+      this.eqEl.style.color = color;
+      this.eqEl.hidden = false;
+    }
   }
 
   toast(msg, ms = 2500) {

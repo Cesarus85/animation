@@ -46,6 +46,7 @@ export class XRApp {
     // Statistik
     this.wrongCount = 0;
     this.lives = 3;
+    this._gameOverShown = false;
 
     // Spieleinstellungen
     this.gameOperation = 'addition';
@@ -163,6 +164,14 @@ export class XRApp {
     }
   }
 
+  showGameOver() {
+    if (this._gameOverShown) return;
+    this._gameOverShown = true;
+    this.ui.setEquation?.('Game Over', '#ff0000');
+    this.math?.equationDisplay?.updateEquation('Game Over', '#ff0000');
+    setTimeout(() => this.end(), 4000);
+  }
+
   cleanup() {
     if (this.gameMode === 'lives') {
       this.ui.setLives?.(0);
@@ -210,6 +219,7 @@ export class XRApp {
     this._didWarmup = false;
     this.wrongCount = 0;
     this.lives = 3;
+    this._gameOverShown = false;
   }
 
   async _warmupPipelinesOnce() {
@@ -237,6 +247,11 @@ export class XRApp {
     this._prevTime = now;
 
     this._lastFrame = frame;
+
+    if (this._gameOverShown) {
+      this.renderer.render(this.sceneRig.scene, this.sceneRig.camera);
+      return;
+    }
 
     // Einmalige Platzierung der Blöcke, wenn ViewerPose vorliegt
     if (!this._placedBlocks) {
@@ -301,7 +316,7 @@ export class XRApp {
             this.lives--;
             this.ui.setLives?.(this.lives);
             this.grooveCharacter?.statsBoard?.setLives?.(this.lives);
-            if (this.lives <= 0) this.end();
+            if (this.lives <= 0) this.showGameOver();
           }
           this.grooveCharacter?.playIncorrectAnimation();
           this.grooveCharacter?.statsBoard?.incrementWrong();

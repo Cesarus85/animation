@@ -7,6 +7,7 @@ export class EquationDisplay {
     this.mesh = null;
     this.texCache = new Map();
     this._currentText = '';
+    this._currentColor = '#ffffff';
   }
 
   createDisplay(viewerPos, viewerQuat) {
@@ -38,15 +39,16 @@ export class EquationDisplay {
     
     // Erste Gleichung anzeigen falls vorhanden
     if (this._currentText) {
-      this.updateEquation(this._currentText);
+      this.updateEquation(this._currentText, this._currentColor);
     }
   }
 
-  updateEquation(text) {
+  updateEquation(text, color = '#ffffff') {
     this._currentText = text;
+    this._currentColor = color;
     if (!this.mesh) return;
 
-    const texture = this._getOrMakeEquationTexture(text);
+    const texture = this._getOrMakeEquationTexture(text, color);
     this.mesh.material.map = texture;
     this.mesh.material.needsUpdate = true;
   }
@@ -76,8 +78,9 @@ export class EquationDisplay {
     this.texCache.clear();
   }
 
-  _getOrMakeEquationTexture(text) {
-    if (this.texCache.has(text)) return this.texCache.get(text);
+  _getOrMakeEquationTexture(text, color) {
+    const key = `${color}|${text}`;
+    if (this.texCache.has(key)) return this.texCache.get(key);
 
     const canvas = document.createElement('canvas');
     canvas.width = 512;
@@ -102,15 +105,15 @@ export class EquationDisplay {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
     ctx.fillText(text, canvas.width/2 + 2, canvas.height/2 + 2);
 
-    // Weißer Text
-    ctx.fillStyle = '#ffffff';
+    // Textfarbe
+    ctx.fillStyle = color;
     ctx.fillText(text, canvas.width/2, canvas.height/2);
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.anisotropy = 4;
     texture.needsUpdate = true;
     
-    this.texCache.set(text, texture);
+    this.texCache.set(key, texture);
     return texture;
   }
 }
