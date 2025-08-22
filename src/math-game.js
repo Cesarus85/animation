@@ -20,6 +20,7 @@ export class MathGame {
     // Spieleinstellungen (Standard-Werte)
     this.operation = 'addition';
     this.maxResult = 20;
+    this.gameMode = 'endless';
   }
 
   attachBlocks(blocks, viewerPos = null, viewerQuat = null) {
@@ -54,6 +55,9 @@ export class MathGame {
       if (this.failManager && hitPosition) {
         this.failManager.spawn(hitPosition, new THREE.Vector3(0, 1, 0));
       }
+      if (this.gameMode === 'endless') {
+        this._newProblem(false);
+      }
     }
     return isCorrect;
   }
@@ -65,6 +69,10 @@ export class MathGame {
   setGameSettings(operation, maxResult) {
     this.operation = operation;
     this.maxResult = maxResult;
+  }
+
+  setGameMode(mode) {
+    this.gameMode = mode;
   }
 
   dispose() {
