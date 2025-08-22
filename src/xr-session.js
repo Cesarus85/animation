@@ -60,6 +60,7 @@ export class XRApp {
 
   setGameMode(mode) {
     this.gameMode = mode;
+    this.math?.setGameMode(mode);
   }
 
   async startAR() {
@@ -95,6 +96,7 @@ export class XRApp {
     
     // Spieleinstellungen an MathGame weitergeben
     this.math.setGameSettings(this.gameOperation, this.gameMaxResult);
+    this.math.setGameMode(this.gameMode);
     
     // AudioManager an GrooveCharacter weitergeben
     this.grooveCharacter.setAudioManager(this.audio);
