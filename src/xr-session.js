@@ -42,7 +42,10 @@ export class XRApp {
     this._placedBlocks = false;
     this._prevTime = null;
     this._didWarmup = false;
-    
+
+    // Statistik
+    this.wrongCount = 0;
+
     // Spieleinstellungen
     this.gameOperation = 'addition';
     this.gameMaxResult = 20;
@@ -170,6 +173,7 @@ export class XRApp {
     this._placedBlocks = false;
     this._prevTime = null;
     this._didWarmup = false;
+    this.wrongCount = 0;
   }
 
   async _warmupPipelinesOnce() {
@@ -255,7 +259,8 @@ export class XRApp {
           // Coin-Sound abspielen
           this.audio?.playCoinSound();
         } else {
-          // Falsche Antwort → Groove Charakter Animation + Sound
+          // Falsche Antwort → Zähler erhöhen, StatsBoard & Sound aktualisieren
+          this.wrongCount++;
           this.grooveCharacter?.playIncorrectAnimation();
           this.grooveCharacter?.statsBoard?.incrementWrong();
           // Bump-Sound abspielen
