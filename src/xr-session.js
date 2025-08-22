@@ -49,11 +49,19 @@ export class XRApp {
     // Spieleinstellungen
     this.gameOperation = 'addition';
     this.gameMaxResult = 20;
+    this.gameMode = 'endless';
+    this.remainingLives = 3;
   }
 
   setGameSettings(operation, maxResult) {
     this.gameOperation = operation;
     this.gameMaxResult = maxResult;
+  }
+
+  setGameMode(mode, lives = 3) {
+    this.gameMode = mode;
+    this.remainingLives = lives;
+    this.math?.setGameMode?.(mode);
   }
 
   async startAR() {
@@ -76,9 +84,10 @@ export class XRApp {
     this.grooveCharacter = new GrooveCharacterManager(this.sceneRig.scene);
     this.audio  = new AudioManager();
     this.ui.setAudioManager?.(this.audio);
-    
+
     // Spieleinstellungen an MathGame weitergeben
     this.math.setGameSettings(this.gameOperation, this.gameMaxResult);
+    this.math.setGameMode(this.gameMode);
     
     // AudioManager an GrooveCharacter weitergeben
     this.grooveCharacter.setAudioManager(this.audio);
@@ -175,6 +184,7 @@ export class XRApp {
     this._prevTime = null;
     this._didWarmup = false;
     this.wrongCount = 0;
+    this.remainingLives = 3;
   }
 
   async _warmupPipelinesOnce() {
@@ -266,6 +276,15 @@ export class XRApp {
           this.grooveCharacter?.statsBoard?.incrementWrong();
           // Bump-Sound abspielen
           this.audio?.playBumpSound();
+          if (this.gameMode === 'lives') {
+            this.remainingLives--;
+            this.ui.toast?.(`Lives: ${this.remainingLives}`);
+            if (this.remainingLives <= 0) {
+              this.ui.toast?.('Game Over!');
+              this.end();
+              return;
+            }
+          }
         }
       }
     }
