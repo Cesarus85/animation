@@ -5,6 +5,7 @@ import { StatsBoard } from './stats-board.js';
 
 const ANIMATION_DURATION = 2000; // 2 Sekunden in Milliseconds
 const CROSSFADE_DURATION = 0.5; // 0.5 Sekunden für weiche Übergänge
+const STATS_BOARD_DISTANCE = 0.8; // Distanz der Statistik-Tafel hinter der Figur in Metern
 
 export class GrooveCharacterManager {
   constructor(scene) {
@@ -214,7 +215,7 @@ export class GrooveCharacterManager {
     if (!this.statsBoard?.mesh) return;
     const behind = new THREE.Vector3(0, 0, -1)
       .applyQuaternion(this.characterQuaternion)
-      .multiplyScalar(-0.4);
+      .multiplyScalar(-STATS_BOARD_DISTANCE);
     const pos = this.characterPosition.clone()
       .add(behind)
       .add(new THREE.Vector3(0, 1.5, 0));
