@@ -45,6 +45,7 @@ export class XRApp {
 
     // Statistik
     this.wrongCount = 0;
+    this.lives = 3;
 
     // Spieleinstellungen
     this.gameOperation = 'addition';
@@ -81,6 +82,11 @@ export class XRApp {
     this.grooveCharacter = new GrooveCharacterManager(this.sceneRig.scene);
     this.audio  = new AudioManager();
     this.ui.setAudioManager?.(this.audio);
+
+    // Lives zurücksetzen und anzeigen
+    this.lives = 3;
+    this.ui.setLives?.(this.lives);
+    this.grooveCharacter?.statsBoard?.setLives?.(this.lives);
     
     // Spieleinstellungen an MathGame weitergeben
     this.math.setGameSettings(this.gameOperation, this.gameMaxResult);
@@ -114,7 +120,11 @@ export class XRApp {
 
     // Session-Ende sauber behandeln
     session.addEventListener('end', () => {
-      try { this.ui.setHudVisible?.(false); } catch {}
+      try {
+        this.ui.setHudVisible?.(false);
+        this.ui.setLives?.(0);
+        this.grooveCharacter?.statsBoard?.setLives?.(0);
+      } catch {}
       this.cleanup();
       // Callback aufrufen, damit UI sich zurücksetzen kann
       if (this.onSessionEnd) this.onSessionEnd();
@@ -142,6 +152,8 @@ export class XRApp {
   }
 
   cleanup() {
+    this.ui.setLives?.(0);
+    this.grooveCharacter?.statsBoard?.setLives?.(0);
     // Animations-Loop stoppen
     try { this.renderer?.setAnimationLoop(null); } catch {}
 
@@ -180,6 +192,7 @@ export class XRApp {
     this._prevTime = null;
     this._didWarmup = false;
     this.wrongCount = 0;
+    this.lives = 3;
   }
 
   async _warmupPipelinesOnce() {
@@ -267,10 +280,14 @@ export class XRApp {
         } else {
           // Falsche Antwort → Zähler erhöhen, StatsBoard & Sound aktualisieren
           this.wrongCount++;
+          this.lives--;
+          this.ui.setLives?.(this.lives);
+          this.grooveCharacter?.statsBoard?.setLives?.(this.lives);
           this.grooveCharacter?.playIncorrectAnimation();
           this.grooveCharacter?.statsBoard?.incrementWrong();
           // Bump-Sound abspielen
           this.audio?.playBumpSound();
+          if (this.lives <= 0) this.end();
         }
       }
     }
