@@ -280,14 +280,16 @@ export class XRApp {
         } else {
           // Falsche Antwort → Zähler erhöhen, StatsBoard & Sound aktualisieren
           this.wrongCount++;
-          this.lives--;
-          this.ui.setLives?.(this.lives);
-          this.grooveCharacter?.statsBoard?.setLives?.(this.lives);
+          if (this.gameMode === 'lives') {
+            this.lives--;
+            this.ui.setLives?.(this.lives);
+            this.grooveCharacter?.statsBoard?.setLives?.(this.lives);
+            if (this.lives <= 0) this.end();
+          }
           this.grooveCharacter?.playIncorrectAnimation();
           this.grooveCharacter?.statsBoard?.incrementWrong();
           // Bump-Sound abspielen
           this.audio?.playBumpSound();
-          if (this.lives <= 0) this.end();
         }
       }
     }
