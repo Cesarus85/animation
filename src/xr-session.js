@@ -286,12 +286,15 @@ export class XRApp {
 
     if (this.gameMode === 'timed') {
       this.timeLeft -= dtMs / 1000;
+      console.log('timeLeft:', this.timeLeft.toFixed(2)); // Debugging
+      if (this.timeLeft <= 0) {
+        this.showGameOver();
+        this.renderer.render(this.sceneRig.scene, this.sceneRig.camera);
+        return; // stop further updates once time is up
+      }
       const remaining = Math.ceil(this.timeLeft);
       this.ui.setTimer?.(Math.max(0, remaining));
       this.grooveCharacter?.statsBoard?.setTime?.(Math.max(0, remaining));
-      if (this.timeLeft <= 0) {
-        this.showGameOver();
-      }
     }
 
     // Einmalige Platzierung der Blöcke, wenn ViewerPose vorliegt
