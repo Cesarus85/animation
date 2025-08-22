@@ -75,6 +75,7 @@ export class XRApp {
     this.math   = new MathGame(this.ui, this.sceneRig.scene, this.fails);
     this.grooveCharacter = new GrooveCharacterManager(this.sceneRig.scene);
     this.audio  = new AudioManager();
+    this.ui.setAudioManager?.(this.audio);
     
     // Spieleinstellungen an MathGame weitergeben
     this.math.setGameSettings(this.gameOperation, this.gameMaxResult);

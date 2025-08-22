@@ -115,7 +115,12 @@ export class AudioManager {
   }
 
   setVolume(volume) {
-    this.volume = Math.max(0, Math.min(1, volume)); // 0-1 begrenzen
+    // Kann auch vor ensureLoaded aufgerufen werden
+    this.volume = Math.max(0, Math.min(1, volume));
+    // Falls der AudioContext bereits existiert, sicherstellen, dass er aktiv ist
+    if (this.audioContext && this.audioContext.state === 'suspended') {
+      this.audioContext.resume();
+    }
   }
 
   dispose() {

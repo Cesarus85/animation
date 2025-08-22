@@ -8,6 +8,30 @@ export class UI {
 
     // Equation-Banner (immer sichtbar im DOM Overlay)
     this.eqEl = document.getElementById('equation');
+
+    // Lautstärke-Regler hinzufügen
+    this.audioManager = null;
+    this.volumeSlider = document.createElement('input');
+    Object.assign(this.volumeSlider, {
+      type: 'range',
+      min: '0',
+      max: '1',
+      step: '0.01',
+      value: '0.7'
+    });
+
+    const volRow = document.createElement('div');
+    volRow.className = 'row';
+    const volLabel = document.createElement('span');
+    volLabel.textContent = 'Volume';
+    volRow.appendChild(volLabel);
+    volRow.appendChild(this.volumeSlider);
+    if (this.hud) this.hud.appendChild(volRow);
+
+    this.volumeSlider.addEventListener('input', (e) => {
+      const v = parseFloat(e.target.value);
+      this.audioManager?.setVolume(v);
+    });
   }
 
   setHudVisible(v) {
@@ -37,5 +61,12 @@ export class UI {
     el.textContent = msg; el.style.opacity = '1';
     clearTimeout(this._toastTimer);
     this._toastTimer = setTimeout(() => el && (el.style.opacity = '0'), ms);
+  }
+
+  setAudioManager(am) {
+    this.audioManager = am;
+    if (this.volumeSlider) {
+      this.volumeSlider.value = am.volume.toString();
+    }
   }
 }
