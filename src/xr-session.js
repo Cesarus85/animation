@@ -49,11 +49,16 @@ export class XRApp {
     // Spieleinstellungen
     this.gameOperation = 'addition';
     this.gameMaxResult = 20;
+    this.gameMode = 'endless';
   }
 
   setGameSettings(operation, maxResult) {
     this.gameOperation = operation;
     this.gameMaxResult = maxResult;
+  }
+
+  setGameMode(mode) {
+    this.gameMode = mode;
   }
 
   async startAR() {

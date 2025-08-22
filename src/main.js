@@ -43,6 +43,7 @@ function initDropdown(dropdownId, storageKey, fallback) {
 
 initDropdown('operation-dropdown', 'operation', 'addition');
 initDropdown('max-result-dropdown', 'maxResult', '20');
+initDropdown('mode-dropdown', 'gameMode', 'endless');
 
 // Callback für Session-Ende setzen
 app.onSessionEnd = () => {
@@ -66,39 +67,44 @@ startBtn.addEventListener('click', async () => {
     console.log('Suche nach Dropdown-Elementen...');
     const operationDropdown = document.getElementById('operation-dropdown');
     const maxResultDropdown = document.getElementById('max-result-dropdown');
-    
-    console.log('Gefundene Elemente:', { operationDropdown, maxResultDropdown });
-    
-    if (!operationDropdown || !maxResultDropdown) {
+    const modeDropdown = document.getElementById('mode-dropdown');
+
+    console.log('Gefundene Elemente:', { operationDropdown, maxResultDropdown, modeDropdown });
+
+    if (!operationDropdown || !maxResultDropdown || !modeDropdown) {
       console.error('Dropdown-Elemente nicht gefunden');
       ui.toast('Fehler beim Lesen der Einstellungen - Dropdowns nicht gefunden');
       startBtn.disabled = false;
       return;
     }
-    
+
     const operationSelected = operationDropdown.querySelector('.dropdown-selected');
     const maxResultSelected = maxResultDropdown.querySelector('.dropdown-selected');
-    
-    console.log('Selected Elemente:', { operationSelected, maxResultSelected });
-    
-    if (!operationSelected || !maxResultSelected) {
+    const modeSelected = modeDropdown.querySelector('.dropdown-selected');
+
+    console.log('Selected Elemente:', { operationSelected, maxResultSelected, modeSelected });
+
+    if (!operationSelected || !maxResultSelected || !modeSelected) {
       console.error('Dropdown-Selected-Elemente nicht gefunden');
       ui.toast('Fehler beim Lesen der Einstellungen - Selected-Elemente nicht gefunden');
       startBtn.disabled = false;
       return;
     }
-    
+
     const operation = operationSelected.dataset.value || 'addition';
     const maxResult = parseInt(maxResultSelected.dataset.value) || 20;
+    const gameMode = modeSelected.dataset.value || 'endless';
 
-    console.log('Einstellungen gelesen:', { operation, maxResult });
+    console.log('Einstellungen gelesen:', { operation, maxResult, gameMode });
 
     // Aktuelle Auswahl speichern
     localStorage.setItem('operation', operation);
     localStorage.setItem('maxResult', String(maxResult));
+    localStorage.setItem('gameMode', gameMode);
 
     // Einstellungen an die App weitergeben
     app.setGameSettings(operation, maxResult);
+    app.setGameMode(gameMode);
     
     await app.startAR();
     ui.setHudVisible(true);
